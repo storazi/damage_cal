@@ -1791,13 +1791,7 @@
     "defenseCoefficient": 20,
     "agilityCoefficient": 26
   },
-  "바가루": {
-    "initialCoefficient": 20,
-    "healthCoefficient": 32,
-    "attackCoefficient": 29,
-    "defenseCoefficient": 23,
-    "agilityCoefficient": 25
-  },
+"바가루": { "initialCoefficient": 16, "healthCoefficient": 41, "attackCoefficient": 39, "defenseCoefficient": 30, "agilityCoefficient": 32 },
   "푸우리": {
     "initialCoefficient": 21,
     "healthCoefficient": 30,
@@ -6642,4 +6636,5 @@
     "defenseCoefficient": 0,
     "agilityCoefficient": 0
   }
+
 }
