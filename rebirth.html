@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>비흡연자의 쉬는시간 - 시가 계산기</title>
+<style>
+    /* 🎨 Cigar Style Dark Theme */
+    :root {
+        --bg-main: #0a0a0a;
+        --bg-panel: #161616;
+        --border-main: #222222;
+        --border-gold: #443c2c;
+        --accent-gold: linear-gradient(135deg, #ffd447 0%, #ff9500 100%);
+        --text-gold: #ffd447;
+        --text-main: #e0e0e0;
+        --text-sub: #999999;
+    }
+
+    body {
+        margin: 0; padding: 0;
+        background-color: var(--bg-main);
+        font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
+        color: var(--text-main);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .container {
+        max-width: 480px;
+        width: 90%;
+        margin: 30px auto;
+        padding: 30px;
+        background: var(--bg-panel);
+        border: 1px solid var(--border-main);
+        border-radius: 24px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    h1 { 
+        text-align: center; 
+        margin-bottom: 25px; 
+        font-size: 26px; 
+        font-weight: 800; 
+        background: var(--accent-gold);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -1px;
+    }
+
+    .intro {
+        margin-bottom: 25px; padding: 18px; 
+        background: rgba(255, 212, 71, 0.03);
+        border: 1px solid var(--border-gold); 
+        border-radius: 16px;
+        line-height: 1.6; text-align: center; 
+        color: var(--text-sub); font-size: 13px;
+    }
+
+    .intro strong { color: var(--text-gold); }
+
+    .input-group { position: relative; margin-bottom: 25px; }
+    label { display: block; margin-bottom: 10px; font-size: 14px; font-weight: 600; color: var(--text-gold); }
+
+    #pet-name {
+        width: 100%; padding: 16px; font-size: 16px; 
+        background: #000;
+        border: 1px solid var(--border-main);
+        color: #fff;
+        border-radius: 12px; box-sizing: border-box; 
+        outline: none;
+        transition: 0.3s;
+    }
+
+    #pet-name:focus { border-color: #ff9500; box-shadow: 0 0 10px rgba(255, 149, 0, 0.2); }
+
+    .stat-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        background: rgba(255,255,255,0.02);
+        padding: 10px 15px;
+        border-radius: 12px;
+    }
+
+    .stat-label { font-size: 15px; font-weight: 600; }
+
+    .control-group { display: flex; align-items: center; gap: 8px; }
+
+    input[type="number"] {
+        width: 65px; height: 46px; font-size: 18px; font-weight: 700;
+        border: 1px solid var(--border-main); border-radius: 10px;
+        text-align: center; background: #000; color: #fff;
+        cursor: pointer; -moz-appearance: textfield;
+    }
+    
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+    .btn-step {
+        width: 44px; height: 44px; border: 1px solid var(--border-main);
+        background: #222; border-radius: 10px; font-size: 20px;
+        font-weight: bold; color: var(--text-gold); cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .btn-step:hover { background: #333; border-color: var(--text-gold); }
+    .btn-step:active { transform: scale(0.92); }
+
+    #suggestions {
+        list-style: none; padding: 0; margin: 0; position: absolute;
+        top: 100%; left: 0; right: 0; background: #1a1a1a;
+        border: 1px solid #ff9500; border-top: none;
+        border-radius: 0 0 12px 12px;
+        max-height: 240px; overflow-y: auto; z-index: 999; display: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    #suggestions li { 
+        padding: 14px 16px; cursor: pointer; border-bottom: 1px solid #222; 
+        font-size: 15px; color: #ccc;
+    }
+    #suggestions li:hover { background-color: rgba(255, 149, 0, 0.15); color: #fff; }
+    #suggestions li strong { color: var(--text-gold); }
+
+    button#calculate-btn {
+        width: 100%; margin-top: 25px; padding: 20px; font-size: 18px;
+        font-weight: 800; background: var(--accent-gold);
+        color: #000; border: none; border-radius: 14px; cursor: pointer;
+        transition: 0.3s;
+    }
+
+    button#calculate-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 149, 0, 0.4); }
+    button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .result { 
+        margin-top: 25px; padding: 25px; 
+        background: #000; 
+        border: 1px solid var(--border-gold); 
+        border-radius: 18px; 
+        text-align: center;
+        min-height: 60px;
+    }
+    
+    #loading { display: none; text-align: center; margin-top: 15px; color: var(--text-gold); font-weight: 500; }
+
+    footer { text-align: center; margin: 30px 0; width: 100%; }
+</style>
+</head>
+<body>
+    <div class="container">
+        <h1>시가 계산기</h1>
+        <div class="intro">
+            <strong>Update : 2026/02/21</strong><br>
+            정석 대비 <strong>차이값(+/-)</strong>을 입력하세요.<br>
+            <small style="color:var(--text-gold)">숫자를 클릭하면 0으로 초기화됩니다.</small>
+        </div>
+
+        <div class="input-group">
+            <label for="pet-name">페트 이름</label>
+            <input type="text" id="pet-name" placeholder="데이터 불러오는 중..." autocomplete="off" disabled>
+            <ul id="suggestions"></ul>
+        </div>
+
+        <div class="stat-row"><div class="stat-label">체력 차이</div><div class="control-group"><button class="btn-step" onclick="step('diff-health', -1)">-</button><input type="number" id="diff-health" value="0" onclick="resetVal(this)"><button class="btn-step" onclick="step('diff-health', 1)">+</button></div></div>
+        <div class="stat-row"><div class="stat-label">공격력 차이</div><div class="control-group"><button class="btn-step" onclick="step('diff-attack', -1)">-</button><input type="number" id="diff-attack" value="0" onclick="resetVal(this)"><button class="btn-step" onclick="step('diff-attack', 1)">+</button></div></div>
+        <div class="stat-row"><div class="stat-label">방어력 차이</div><div class="control-group"><button class="btn-step" onclick="step('diff-defense', -1)">-</button><input type="number" id="diff-defense" value="0" onclick="resetVal(this)"><button class="btn-step" onclick="step('diff-defense', 1)">+</button></div></div>
+        <div class="stat-row"><div class="stat-label">순발력 차이</div><div class="control-group"><button class="btn-step" onclick="step('diff-agility', -1)">-</button><input type="number" id="diff-agility" value="0" onclick="resetVal(this)"><button class="btn-step" onclick="step('diff-agility', 1)">+</button></div></div>
+
+        <button id="calculate-btn" disabled>데이터 대기 중</button>
+
+        <div id="result" class="result">페트 이름을 먼저 선택해 주세요.</div>
+        <div id="loading">계산 중입니다...</div>
+    </div>
+
+    <script>
+        let petData = {};
+        let currentIdealStats = null;
+
+        // 데이터 로드
+        async function loadPetData() {
+            try {
+                const response = await fetch('pet.json');
+                if (!response.ok) throw new Error('파일 없음');
+                petData = await response.json();
+                const nameInput = document.getElementById("pet-name");
+                nameInput.disabled = false;
+                nameInput.placeholder = "이름 또는 초성 입력";
+                document.getElementById("calculate-btn").innerText = "계산하기";
+                document.getElementById("calculate-btn").disabled = false;
+            } catch (error) {
+                document.getElementById("result").innerText = "pet.json 로드 실패";
+            }
+        }
+        loadPetData();
+
+        // 헬퍼 함수들
+        function step(id, val) { const el = document.getElementById(id); el.value = parseInt(el.value || 0) + val; }
+        function resetVal(el) { el.value = 0; el.select(); }
+        function getChosung(str) {
+            const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
+            let result = "";
+            for(let i=0; i<str.length; i++) {
+                let code = str.charCodeAt(i) - 44032;
+                if(code > -1 && code < 11172) result += cho[Math.floor(code/588)];
+                else result += str.charAt(i);
+            }
+            return result;
+        }
+
+        // 정석 스탯 계산식
+        function calculateIdealStats(pet) {
+            const bH = pet.healthCoefficient + 4.5;
+            const bA = pet.attackCoefficient + 4.5;
+            const bD = pet.defenseCoefficient + 4.5;
+            const bG = pet.agilityCoefficient + 4.5;
+            const iH = (bH * pet.initialCoefficient) / 100;
+            const iA = (bA * pet.initialCoefficient) / 100;
+            const iD = (bD * pet.initialCoefficient) / 100;
+            const iG = (bG * pet.initialCoefficient) / 100;
+            return {
+                health: Math.floor(iH * 4 + iA + iD + iG),
+                attack: Math.floor(iH * 0.1 + iA + iD * 0.1 + iG * 0.05),
+                defense: Math.floor(iH * 0.1 + iA * 0.1 + iD + iG * 0.05),
+                agility: Math.floor(iG)
+            };
+        }
+
+        const petNameInput = document.getElementById("pet-name");
+        const suggestions = document.getElementById("suggestions");
+
+        // 검색 자동완성
+        petNameInput.addEventListener("input", () => {
+            const query = petNameInput.value.trim();
+            suggestions.innerHTML = "";
+            if (!query) { suggestions.style.display = "none"; return; }
+            const queryChosung = getChosung(query);
+            const matches = Object.keys(petData).map(name => {
+                const nameChosung = getChosung(name);
+                let score = -1;
+                if (name === query) score = 4;
+                else if (name.startsWith(query)) score = 3;
+                else if (name.includes(query)) score = 2;
+                else if (nameChosung.startsWith(queryChosung)) score = 1;
+                else if (nameChosung.includes(queryChosung)) score = 0;
+                return { name, score };
+            }).filter(i => i.score > -1).sort((a,b) => b.score - a.score || a.name.localeCompare(b.name));
+
+            if (matches.length > 0) {
+                suggestions.style.display = "block";
+                matches.slice(0, 12).forEach(m => {
+                    const li = document.createElement("li");
+                    li.innerHTML = m.name.replace(new RegExp(query, 'gi'), (match) => `<strong>${match}</strong>`);
+                    li.onclick = () => {
+                        petNameInput.value = m.name;
+                        suggestions.style.display = "none";
+                        currentIdealStats = calculateIdealStats(petData[m.name]);
+                        document.getElementById("result").innerText = "차이값을 입력하고 계산을 눌러주세요.";
+                    };
+                    suggestions.appendChild(li);
+                });
+            } else { suggestions.style.display = "none"; }
+        });
+
+        // 실제 계산 로직
+        document.getElementById("calculate-btn").addEventListener("click", () => {
+            const name = petNameInput.value;
+            if (!petData[name]) { alert("페트를 선택해주세요!"); return; }
+            document.getElementById("loading").style.display = "block";
+            document.getElementById("result").innerHTML = "";
+
+            setTimeout(() => {
+                const tH = currentIdealStats.health + parseInt(document.getElementById("diff-health").value || 0);
+                const tA = currentIdealStats.attack + parseInt(document.getElementById("diff-attack").value || 0);
+                const tD = currentIdealStats.defense + parseInt(document.getElementById("diff-defense").value || 0);
+                const tG = currentIdealStats.agility + parseInt(document.getElementById("diff-agility").value || 0);
+
+                const pet = petData[name];
+                let matched = 0, hCases = 0;
+
+                // 5차원 루프 (R: 초기치 보정, B: 포인트 투자)
+                for (let hR = -2; hR <= 2; hR++) {
+                    for (let aR = -2; aR <= 2; aR++) {
+                        for (let dR = -2; dR <= 2; dR++) {
+                            for (let gR = -2; gR <= 2; gR++) {
+                                for (let hB = 0; hB <= 10; hB++) {
+                                    for (let aB = 0; aB <= 10; aB++) {
+                                        for (let dB = 0; dB <= 10; dB++) {
+                                            const gB = 10 - hB - aB - dB;
+                                            if (gB < 0 || gB > 10) continue;
+                                            const iH = ((pet.healthCoefficient + hR + hB) * pet.initialCoefficient) / 100;
+                                            const iA = ((pet.attackCoefficient + aR + aB) * pet.initialCoefficient) / 100;
+                                            const iD = ((pet.defenseCoefficient + dR + dB) * pet.initialCoefficient) / 100;
+                                            const iG = ((pet.agilityCoefficient + gR + gB) * pet.initialCoefficient) / 100;
+                                            if (Math.floor(iH * 4 + iA + iD + iG) === tH &&
+                                                Math.floor(iH * 0.1 + iA + iD * 0.1 + iG * 0.05) === tA &&
+                                                Math.floor(iH * 0.1 + iA * 0.1 + iD + iG * 0.05) === tD &&
+                                                Math.floor(iG) === tG) {
+                                                matched++;
+                                                if (hR === 2 && aR === 2 && dR === 2 && gR === 2) hCases++;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (matched === 0) {
+                    document.getElementById("result").textContent = "존재할 수 없는 스탯 조합입니다.";
+                } else {
+                    const p = ((hCases / matched) * 100).toFixed(2);
+                    const realP = p === "100.00" ? "99.9" : p;
+                    const expected = p > 0 ? (100 / p).toFixed(1) : "∞";
+                    document.getElementById("result").innerHTML = `
+                        <div style="font-size:20px; color:#fff;">성공 확률 : <strong style="color:var(--text-gold)">${realP}%</strong></div>
+                        <div style="margin-top:10px; font-size:14px; color:var(--text-sub);">
+                            성공 기대값 : 약 <strong>${expected}번</strong> 시도<br>
+                            <span style="font-size:11px; opacity:0.5;">(입력값: ${tH} ${tA} ${tD} ${tG})</span>
+                        </div>`;
+                }
+                document.getElementById("loading").style.display = "none";
+            }, 500);
+        });
+
+        // 배경 클릭 시 리스트 닫기
+        document.addEventListener("click", (e) => { if (e.target !== petNameInput) suggestions.style.display = "none"; });
+    </script>
+
+    <footer>
+        <a href="https://hits.sh/storazi.github.io/cigar/">
+            <img alt="Hits" src="https://hits.sh/storazi.github.io/cigar.svg?view=today-total&style=flat-square&label=VISITORS&color=ff9500&labelColor=222222"/>
+        </a>
+        <p style="font-size: 11px; color: var(--text-sub); margin-top:10px; opacity:0.6;">© 2026 sup_bot All rights reserved.</p>
+    </footer>
+</body>
+</html>
