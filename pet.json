@@ -405,7 +405,7 @@
   "실버로스": { "initialCoefficient": 25, "healthCoefficient": 56, "attackCoefficient": 29, "defenseCoefficient": 27, "agilityCoefficient": 11 },
   "푸모나스": { "initialCoefficient": 25, "healthCoefficient": 57, "attackCoefficient": 31, "defenseCoefficient": 27, "agilityCoefficient": 6 },
   "아이스만모": { "initialCoefficient": 23, "healthCoefficient": 52, "attackCoefficient": 35, "defenseCoefficient": 33, "agilityCoefficient": 6 },
-  "토우트": { "initialCoefficient": 22, "healthCoefficient": 60, "attackCoefficient": 44, "defenseCoefficient": 41, "agilityCoefficient": 7 },
+  "토우트": { "initialCoefficient": 21, "healthCoefficient": 50, "attackCoefficient": 38, "defenseCoefficient": 38, "agilityCoefficient": 15 },
   "노보": { "initialCoefficient": 17, "healthCoefficient": 35, "attackCoefficient": 38, "defenseCoefficient": 38, "agilityCoefficient": 19 },
   "베노노크": { "initialCoefficient": 17, "healthCoefficient": 38, "attackCoefficient": 23, "defenseCoefficient": 50, "agilityCoefficient": 25 },
   "블루카비트": { "initialCoefficient": 14, "healthCoefficient": 30, "attackCoefficient": 28, "defenseCoefficient": 30, "agilityCoefficient": 37 },
@@ -966,6 +966,7 @@
   "부이쿠": { "initialCoefficient": 28, "healthCoefficient": 55, "attackCoefficient": 33, "defenseCoefficient": 30, "agilityCoefficient": 8 }
   }
     
+
 
 
 
