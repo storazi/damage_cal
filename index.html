@@ -19,7 +19,7 @@
         h1 { text-align: center; margin-bottom: 20px; font-size: 20px; color: var(--text-gold); }
         .input-group { position: relative; margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-gold); font-weight: bold; }
-        #pet-name { width: 100%; padding: 12px; font-size: 15px; background: var(--input-bg); border: 1px solid var(--border-main); color: #fff; border-radius: 8px; box-sizing: border-box; margin-bottom: 5px; }
+        #pet-name { width: 100%; padding: 12px; font-size: 15px; background: var(--input-bg); border: 1px solid var(--border-main); color: #fff; border-radius: 8px; box-sizing: border-box; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .stat-row { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; }
         .stat-label { font-size: 12px; color: var(--text-sub); margin-bottom: 8px; display: block; text-align: center; }
@@ -43,22 +43,10 @@
         </div>
 
         <div class="stat-grid">
-            <div class="stat-row">
-                <span class="stat-label">공격력</span>
-                <input type="number" id="in-attack" placeholder="0">
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">방어력</span>
-                <input type="number" id="in-defense" placeholder="0">
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">순발력</span>
-                <input type="number" id="in-agility" placeholder="0">
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">체력</span>
-                <input type="number" id="in-health" placeholder="0">
-            </div>
+            <div class="stat-row"><span class="stat-label">공격력</span><input type="number" id="in-attack" placeholder="0"></div>
+            <div class="stat-row"><span class="stat-label">방어력</span><input type="number" id="in-defense" placeholder="0"></div>
+            <div class="stat-row"><span class="stat-label">순발력</span><input type="number" id="in-agility" placeholder="0"></div>
+            <div class="stat-row"><span class="stat-label">체력</span><input type="number" id="in-health" placeholder="0"></div>
         </div>
 
         <button id="calculate-btn" disabled>페트를 선택해주세요</button>
@@ -68,7 +56,9 @@
 
     <script>
         let petData = {};
-        const p = (n) => Math.round(n * 1e12) / 1e12;
+
+        // 업로드 파일의 정밀도 보정 로직 (Rounding)
+        const p = (num) => Math.round(num * 1e10) / 1e10;
 
         async function init() {
             try {
@@ -77,11 +67,12 @@
                 document.getElementById("pet-name").disabled = false;
                 document.getElementById("pet-name").placeholder = "페트 이름 입력";
             } catch (e) {
-                document.getElementById("result").innerText = "pet.json 로드 실패";
+                document.getElementById("result").innerText = "pet.json 파일을 찾을 수 없습니다.";
             }
         }
         init();
 
+        // 초성 검색 로직
         function getChosung(str) {
             const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
             let res = "";
@@ -120,16 +111,13 @@
 
         document.getElementById("calculate-btn").addEventListener("click", () => {
             const pet = petData[nameInput.value];
-            if(!pet) return;
-
             const tA = parseInt(document.getElementById("in-attack").value);
             const tD = parseInt(document.getElementById("in-defense").value);
             const tG = parseInt(document.getElementById("in-agility").value);
             const tH = parseInt(document.getElementById("in-health").value);
 
             if(isNaN(tA) || isNaN(tD) || isNaN(tG) || isNaN(tH)) {
-                alert("모든 스탯을 입력해주세요.");
-                return;
+                alert("모든 스탯을 입력해주세요."); return;
             }
 
             document.getElementById("loading").style.display = "block";
@@ -139,7 +127,7 @@
                 let matched = 0, sGrade = 0;
                 const ic = pet.initialCoefficient;
 
-                // 업로드 파일 '신펫 짜얄계산기'의 8중 루프 로직 최적화 적용
+                // 8중 루프: 가중치(-2~2) 및 보너스 스탯(합 10) 분배
                 for (let aR = -2; aR <= 2; aR++) {
                     for (let dR = -2; dR <= 2; dR++) {
                         for (let gR = -2; gR <= 2; gR++) {
@@ -149,21 +137,23 @@
                                         for (let gB = 0; gB <= 10 - aB - dB; gB++) {
                                             const hB = 10 - aB - dB - gB;
 
-                                            // pet.json의 계수 + 가중치 + 보너스 분배
+                                            // pet.json의 계수에 가중치와 보너스를 더함
                                             const iA = p((pet.attackCoefficient + aR + aB) * ic / 100);
                                             const iD = p((pet.defenseCoefficient + dR + dB) * ic / 100);
                                             const iG = p((pet.agilityCoefficient + gR + gB) * ic / 100);
                                             const iH = p((pet.healthCoefficient + hR + hB) * ic / 100);
 
-                                            if (Math.floor(iG) !== tG) continue; // 순발력 선검증
+                                            // 순발력 선검증 (성능 최적화)
+                                            if (Math.floor(iG) !== tG) continue;
 
+                                            // 업로드된 파일의 공식 적용
                                             const cA = Math.floor(p(iH * 0.1 + iA + iD * 0.1 + iG * 0.05));
                                             const cD = Math.floor(p(iH * 0.1 + iA * 0.1 + iD + iG * 0.05));
                                             const cH = Math.floor(p(iH * 4 + iA + iD + iG));
 
                                             if (cA === tA && cD === tD && cH === tH) {
                                                 matched++;
-                                                // 모든 가중치가 최대(2)인 케이스가 S급
+                                                // 모든 가중치가 2(정석)일 때 S급 판정
                                                 if (aR === 2 && dR === 2 && gR === 2 && hR === 2) sGrade++;
                                             }
                                         }
