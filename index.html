@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>S급 자동 로드 분석기</title>
+    <title>정밀 페트 분석기</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
     <style>
         :root { --bg: #0b101a; --panel: #161a24; --gold: #e6b94d; --text: #d1d8e0; --btn: #28a745; }
@@ -10,45 +10,47 @@
         .container { background: var(--panel); padding: 25px; border-radius: 15px; width: 450px; border: 1px solid #252e3f; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .input-group { margin-bottom: 20px; position: relative; }
         label { display: block; font-size: 13px; color: var(--gold); margin-bottom: 8px; font-weight: bold; }
-        input { width: 100%; padding: 12px; background: #070a10; border: 1px solid #252e3f; color: #fff; border-radius: 8px; box-sizing: border-box; }
+        input { width: 100%; padding: 12px; background: #070a10; border: 1px solid #252e3f; color: #fff; border-radius: 8px; box-sizing: border-box; outline: none; }
         .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .stat-grid input { text-align: center; font-size: 16px; font-weight: bold; }
-        .stat-grid input::placeholder { color: #4a5568; font-size: 14px; }
         #suggestions { list-style: none; padding: 0; margin: 0; position: absolute; width: 100%; background: #1a2233; border: 1px solid var(--gold); z-index: 10; display: none; border-radius: 8px; max-height: 200px; overflow-y: auto; }
         #suggestions li { padding: 12px; border-bottom: 1px solid #252e3f; cursor: pointer; }
         #calculate-btn { width: 100%; padding: 15px; background: var(--btn); border: none; color: white; font-weight: bold; font-size: 16px; cursor: pointer; border-radius: 8px; margin-top: 20px; }
         .result-box { margin-top: 20px; padding: 20px; background: #070a10; border-radius: 10px; border: 1px solid #252e3f; text-align: center; line-height: 1.8; }
         .hl { color: var(--gold); font-weight: bold; }
-        .info-text { font-size: 11px; color: #718096; margin-top: 5px; text-align: center; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="input-group">
-            <label>페트 검색 (초성)</label>
+            <label>페트 검색 (이름/초성)</label>
             <input type="text" id="pet-search" placeholder="페트 이름 입력..." autocomplete="off">
             <ul id="suggestions"></ul>
         </div>
         <div class="input-group">
-            <label>공격 | 방어 | 순발 | 체력 (흐린 숫자는 S급 가이드)</label>
+            <label>공격 | 방어 | 순발 | 체력 (S급 가이드)</label>
             <div class="stat-grid">
                 <input type="number" id="inA" placeholder="S공">
                 <input type="number" id="inD" placeholder="S방">
                 <input type="number" id="inG" placeholder="S순">
                 <input type="number" id="inH" placeholder="S체">
             </div>
-            <p class="info-text">페트 선택 시 S급 기준 수치가 힌트로 표시됩니다.</p>
         </div>
         <button id="calculate-btn">분석 시작</button>
         <div id="result" class="result-box">결과가 여기에 표시됩니다.</div>
     </div>
 
     <script>
-        let petData = {};
-        let selectedPet = null;
-        Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
+        // 데이터셋 직접 관리 (주신 양식)
+        const petData = {
+            "란베르스": { "initialCoefficient": 21, "healthCoefficient": 35, "attackCoefficient": 31, "defenseCoefficient": 19, "agilityCoefficient": 22 },
+            "반기노": { "initialCoefficient": 22, "healthCoefficient": 26, "attackCoefficient": 29, "defenseCoefficient": 29, "agilityCoefficient": 14 },
+            "쿠보": { "initialCoefficient": 22, "healthCoefficient": 25, "attackCoefficient": 28, "defenseCoefficient": 26, "agilityCoefficient": 14 }
+        };
 
-        // 초성 추출
+        let selectedPet = null;
+        Decimal.set({ precision: 20, rounding: Decimal.ROUND_DOWN });
+
         function getCho(s) {
             const c = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
             let r = "";
@@ -60,28 +62,23 @@
             return r;
         }
 
-        // S급 능력치 계산 함수 (가중치 +2 고정)
+        // 인게임 실제 S급 수치 로직 (보너스 제외, 랜덤 변수 +2 최상위 기준)
         function getSGradeStats(pet) {
             const ic = new Decimal(pet.initialCoefficient);
-            // S급은 가중치(Random)가 모두 +2인 상태
-            const R = 2; 
-            // 보너스는 가장 높은 효율을 위해 균등 혹은 특정 배분 (계산기 로직에 맞춤)
-            const B = 2.5; 
+            const calcBase = (val) => new Decimal(val).plus(2).times(ic).dividedBy(100).floor();
 
-            const iH = new Decimal(pet.healthCoefficient).plus(R).plus(B).times(ic).dividedBy(100);
-            const iA = new Decimal(pet.attackCoefficient).plus(R).plus(B).times(ic).dividedBy(100);
-            const iD = new Decimal(pet.defenseCoefficient).plus(R).plus(B).times(ic).dividedBy(100);
-            const iG = new Decimal(pet.agilityCoefficient).plus(R).plus(B).times(ic).dividedBy(100);
+            const iH = calcBase(pet.healthCoefficient);
+            const iA = calcBase(pet.attackCoefficient);
+            const iD = calcBase(pet.defenseCoefficient);
+            const iG = calcBase(pet.agilityCoefficient);
 
             return {
                 A: iH.times(0.1).plus(iA).plus(iD.times(0.1)).plus(iG.times(0.05)).floor().toNumber(),
                 D: iH.times(0.1).plus(iA.times(0.1)).plus(iD).plus(iG.times(0.05)).floor().toNumber(),
-                G: iG.floor().toNumber(),
+                G: iG.toNumber(),
                 H: iH.times(4).plus(iA).plus(iD).plus(iG).floor().toNumber()
             };
         }
-
-        fetch('pet.json?t=' + Date.now()).then(r => r.json()).then(d => { petData = d; });
 
         const sIn = document.getElementById('pet-search');
         const sBox = document.getElementById('suggestions');
@@ -101,13 +98,11 @@
                         sIn.value = name; 
                         selectedPet = petData[name]; 
                         sBox.style.display = "none";
-                        
-                        // S급 가이드 수치 자동 로드
-                        const sStats = getSGradeStats(selectedPet);
-                        document.getElementById('inA').placeholder = sStats.A;
-                        document.getElementById('inD').placeholder = sStats.D;
-                        document.getElementById('inG').placeholder = sStats.G;
-                        document.getElementById('inH').placeholder = sStats.H;
+                        const s = getSGradeStats(selectedPet);
+                        document.getElementById('inA').placeholder = s.A;
+                        document.getElementById('inD').placeholder = s.D;
+                        document.getElementById('inG').placeholder = s.G;
+                        document.getElementById('inH').placeholder = s.H;
                     };
                     sBox.appendChild(li);
                 });
@@ -115,9 +110,8 @@
         });
 
         document.getElementById('calculate-btn').addEventListener('click', () => {
-            if (!selectedPet) { alert("페트를 선택해주세요."); return; }
+            if (!selectedPet) return;
             
-            // 입력값이 없으면 가이드(placeholder) 값을 사용하도록 설정 가능
             const tA = parseInt(document.getElementById('inA').value) || parseInt(document.getElementById('inA').placeholder);
             const tD = parseInt(document.getElementById('inD').value) || parseInt(document.getElementById('inD').placeholder);
             const tG = parseInt(document.getElementById('inG').value) || parseInt(document.getElementById('inG').placeholder);
@@ -125,10 +119,6 @@
 
             let matched = 0, sGrade = 0;
             const ic = new Decimal(selectedPet.initialCoefficient);
-            const hC = new Decimal(selectedPet.healthCoefficient);
-            const aC = new Decimal(selectedPet.attackCoefficient);
-            const dC = new Decimal(selectedPet.defenseCoefficient);
-            const gC = new Decimal(selectedPet.agilityCoefficient);
 
             for (let aR = -2; aR <= 2; aR++) {
             for (let dR = -2; dR <= 2; dR++) {
@@ -138,30 +128,28 @@
             for (let dB = 0; dB <= 10 - aB; dB++) {
             for (let gB = 0; gB <= 10 - aB - dB; gB++) {
                 const hB = 10 - aB - dB - gB;
-                const iH = hC.plus(hR).plus(hB).times(ic).dividedBy(100);
-                const iA = aC.plus(aR).plus(aB).times(ic).dividedBy(100);
-                const iD = dC.plus(dR).plus(dB).times(ic).dividedBy(100);
-                const iG = gC.plus(gR).plus(gB).times(ic).dividedBy(100);
+                const iH = new Decimal(selectedPet.healthCoefficient).plus(hR).plus(hB).times(ic).dividedBy(100).floor();
+                const iA = new Decimal(selectedPet.attackCoefficient).plus(aR).plus(aB).times(ic).dividedBy(100).floor();
+                const iD = new Decimal(selectedPet.defenseCoefficient).plus(dR).plus(dB).times(ic).dividedBy(100).floor();
+                const iG = new Decimal(selectedPet.agilityCoefficient).plus(gR).plus(gB).times(ic).dividedBy(100).floor();
+
+                if (iG.toNumber() !== tG) continue;
 
                 const curA = iH.times(0.1).plus(iA).plus(iD.times(0.1)).plus(iG.times(0.05)).floor().toNumber();
                 const curD = iH.times(0.1).plus(iA.times(0.1)).plus(iD).plus(iG.times(0.05)).floor().toNumber();
-                const curG = iG.floor().toNumber();
                 const curH = iH.times(4).plus(iA).plus(iD).plus(iG).floor().toNumber();
 
-                if (curA === tA && curD === tD && curG === tG && curH === tH) {
+                if (curA === tA && curD === tD && curH === tH) {
                     matched++;
                     if (aR === 2 && dR === 2 && gR === 2 && hR === 2) sGrade++;
                 }
             }}}}}}}
 
             const res = document.getElementById('result');
-            if (matched === 0) {
-                res.innerHTML = "<span style='color:#ff6b6b'>찾을 수 없는 값</span>";
-            } else {
+            if (matched === 0) res.innerHTML = "일치 데이터 없음";
+            else {
                 const prob = (sGrade / matched * 100).toFixed(4);
-                const dProb = (prob === "0.0000" && selectedPet.agilityCoefficient == 14) ? "1.6129" : prob;
-                const dAtt = dProb === "1.6129" ? "62.00" : (100 / parseFloat(dProb)).toFixed(2);
-                res.innerHTML = `분석 결과: <span class="hl">${matched}</span>개 조합 발견<br>성공 확률 : <span class="hl">${dProb}%</span><br>성공 기대값 : <span class="hl">${dAtt}번</span>`;
+                res.innerHTML = `결합 수: <span class="hl">${matched}</span><br>성공 확률: <span class="hl">${prob}%</span>`;
             }
         });
     </script>
