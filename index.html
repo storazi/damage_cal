@@ -3,126 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S급 정밀 분석기 - 통합형</title>
+    <title>짜얄 계산기 - 데이터 매칭 통합본</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
     <style>
-        /* 기존 디자인 유지 및 다크 모드 최적화 */
-        :root { --bg: #0b101a; --panel: #161a24; --gold: #e6b94d; --text: #d1d8e0; --btn: #28a745; --input-bg: #070a10; }
-        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); display: flex; }
-
-        .pet-list { width: 300px; height: 100vh; background: var(--panel); padding: 20px; box-shadow: 2px 0 15px rgba(0, 0, 0, 0.5); overflow-y: auto; position: fixed; left: -300px; top: 0; box-sizing: border-box; transition: left 0.3s ease; border-right: 1px solid #252e3f; }
+        /* 기존 스타일 유지 및 UI 최적화 */
+        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f0f8ff; display: flex; }
+        .pet-list { width: 300px; height: 100vh; background: #ffffff; padding: 20px; box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1); overflow-y: auto; position: fixed; left: -300px; top: 0; box-sizing: border-box; transition: left 0.3s ease; z-index: 100; }
         .pet-list.visible { left: 0; }
-        .pet-list h2 { text-align: center; color: var(--gold); margin: 10px 0; font-size: 18px; }
+        .pet-list h2 { text-align: center; color: #333; margin: 10px 0; }
         .pet-list ul { list-style: none; padding: 0; margin-top: 10px; }
-        .pet-list li { padding: 12px; margin: 5px 0; background: #1c222d; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; border: 1px solid transparent; }
-        .pet-list li:hover { border-color: var(--gold); background: #252e3f; }
-        .pet-list li.active { background-color: #1e3a5f; border-color: var(--gold); }
-
-        .container { width: 100%; height: 100vh; padding: 20px; box-sizing: border-box; transition: margin-left 0.3s ease; display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
+        .pet-list li { padding: 10px; margin: 5px 0; background: #f9f9f9; border-radius: 5px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; }
+        .pet-list li:hover { background-color: #f0f8ff; border-color: #007bff; }
+        .pet-list li.active { background-color: #007bff; color: white; }
+        
+        .container { width: 100%; height: 100vh; background: #ffffff; padding: 20px; overflow-y: auto; box-sizing: border-box; transition: margin-left 0.3s ease; }
         .container.shrunk { margin-left: 300px; width: calc(100% - 300px); }
 
-        .calc-card { background: var(--panel); padding: 30px; border-radius: 20px; width: 100%; max-width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #252e3f; }
-        h1 { text-align: center; color: var(--gold); margin-bottom: 25px; }
-
-        label { display: block; margin-top: 15px; font-weight: bold; color: var(--gold); font-size: 14px; }
-        input { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #252e3f; border-radius: 8px; font-size: 16px; background-color: var(--input-bg); color: #fff; box-sizing: border-box; outline: none; transition: 0.2s; }
-        input:focus { border-color: var(--gold); box-shadow: 0 0 8px rgba(230, 185, 77, 0.2); }
-
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+        .calc-card { max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 15px; }
+        h1 { text-align: center; color: #333; }
+        .notice { background: #e7f3fe; padding: 15px; border-radius: 10px; font-size: 14px; text-align: center; margin-bottom: 20px; border: 1px solid #b3d0f2; }
         
-        button { width: 100%; padding: 15px; margin-top: 25px; background-color: var(--btn); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:hover { background-color: #218838; transform: translateY(-2px); }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
+        input { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
+        
+        /* 공-방-순-체 그리드 배치 */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        button { width: 100%; padding: 15px; margin-top: 20px; background-color: #28a745; color: white; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #218838; }
 
-        .result { margin-top: 20px; padding: 20px; background: var(--input-bg); border: 1px solid #252e3f; border-radius: 10px; text-align: center; line-height: 1.8; font-size: 16px; }
-        .hl { color: var(--gold); font-weight: bold; }
+        .result { margin-top: 20px; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 10px; text-align: center; min-height: 50px; }
+        .toggle-pets-btn { position: fixed; top: 10px; left: 10px; z-index: 101; padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
         
-        .toggle-pets-btn { position: fixed; top: 20px; left: 20px; width: 40px; height: 40px; background: #1e3a5f; color: white; border: none; border-radius: 50%; cursor: pointer; z-index: 100; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        
-        #suggestions { list-style: none; padding: 0; background: #1a2233; border: 1px solid var(--gold); border-radius: 8px; max-height: 150px; overflow-y: auto; display: none; margin-top: 5px; }
-        #suggestions li { padding: 10px; cursor: pointer; color: #fff; border-bottom: 1px solid #252e3f; }
-        #suggestions li:hover { background: #252e3f; }
+        ul#suggestions { list-style: none; padding: 0; background: #fff; border: 1px solid #ddd; border-radius: 8px; max-height: 150px; overflow-y: auto; display: none; margin-top: 2px; }
+        ul#suggestions li { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; }
+        ul#suggestions li:hover { background: #f0f8ff; }
     </style>
 </head>
 <body>
-    <button class="toggle-pets-btn" id="toggle-pets-btn">☰</button>
+    <button class="toggle-pets-btn" id="toggle-pets-btn">☰ 페트목록</button>
 
-    <div class="pet-list" id="pet-sidebar">
+    <div class="pet-list" id="sidebar">
         <h2>- 등록된 페트 -</h2>
         <ul id="pet-list-ui"></ul>
     </div>
 
     <div class="container" id="main-container">
         <div class="calc-card">
-            <h1>분석 계산기</h1>
-            
+            <h1>짜얄 계산기 2</h1>
+            <div class="notice">
+                데이터 매칭 방식 수정 완료 (공-방-순-체 입력)<br>
+                <strong>귤가로스</strong> 등 신규 페트 데이터 완벽 지원
+            </div>
+
             <label>페트 이름</label>
             <div style="position: relative;">
-                <input type="text" id="pet-name" placeholder="이름 또는 초성 입력..." autocomplete="off">
+                <input type="text" id="pet-name" placeholder="페트 이름 입력..." autocomplete="off">
                 <ul id="suggestions"></ul>
             </div>
 
             <div class="stat-grid">
                 <div>
                     <label>공격력</label>
-                    <input type="number" id="inA" placeholder="공격력">
+                    <input type="number" id="inA" placeholder="공">
                 </div>
                 <div>
                     <label>방어력</label>
-                    <input type="number" id="inD" placeholder="방어력">
+                    <input type="number" id="inD" placeholder="방">
                 </div>
                 <div>
                     <label>순발력</label>
-                    <input type="number" id="inG" placeholder="순발력">
+                    <input type="number" id="inG" placeholder="순">
                 </div>
                 <div>
                     <label>체력</label>
-                    <input type="number" id="inH" placeholder="체력">
+                    <input type="number" id="inH" placeholder="체">
                 </div>
             </div>
 
-            <button id="calculate-btn">분석 실행</button>
+            <button id="calculate-btn">계산하기</button>
             <div id="result" class="result">페트를 선택하고 수치를 입력하세요.</div>
         </div>
     </div>
 
     <script>
-        // Decimal.js 설정
         Decimal.set({ precision: 50, rounding: Decimal.ROUND_HALF_UP });
 
-        let petData = {};
+        // 기본 데이터 (귤가로스 포함)
+        const defaultPetData = {
+            "귤가로스": {
+                "initialCoefficient": 28,
+                "healthCoefficient": 23,
+                "attackCoefficient": 35,
+                "defenseCoefficient": 15,
+                "agilityCoefficient": 25
+            },
+            "짜얄(kiketiti)": {initialCoefficient: 17, healthCoefficient: 25, attackCoefficient: 24, defenseCoefficient: 9, agilityCoefficient: 34}
+        };
+
+        let petData = JSON.parse(localStorage.getItem("petData")) || defaultPetData;
         let selectedPet = null;
 
-        // 1. 데이터 로드 (pet.json 우선, 없으면 로컬스토리지)
-        async function loadData() {
-            try {
-                const response = await fetch('pet.json');
-                if (response.ok) {
-                    petData = await response.json();
-                } else {
-                    throw new Error();
-                }
-            } catch (e) {
-                console.warn("pet.json을 찾을 수 없어 로컬 데이터를 사용합니다.");
-                petData = JSON.parse(localStorage.getItem("petData")) || {
-                    "샘플페트": {initialCoefficient: 16, healthCoefficient: 30, attackCoefficient: 29, defenseCoefficient: 10, agilityCoefficient: 37}
-                };
-            }
-            renderPetList();
-        }
+        // 사이드바 토글
+        document.getElementById("toggle-pets-btn").onclick = () => {
+            document.getElementById("sidebar").classList.toggle("visible");
+            document.getElementById("main-container").classList.toggle("shrunk");
+        };
 
-        // 초성 추출 함수
-        function getCho(str) {
-            const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
-            let res = "";
-            for (let i = 0; i < str.length; i++) {
-                const code = str.charCodeAt(i) - 44032;
-                if (code >= 0 && code <= 11172) res += cho[Math.floor(code / 588)];
-                else res += str[i];
-            }
-            return res;
-        }
-
-        // 사이드바 목록 출력
+        // 페트 목록 렌더링
         function renderPetList() {
             const listUI = document.getElementById("pet-list-ui");
             listUI.innerHTML = "";
@@ -134,89 +122,56 @@
             });
         }
 
-        // 페트 선택 로직
+        // 페트 선택 및 가이드 수치 표시
         function selectPet(name) {
             selectedPet = petData[name];
             document.getElementById("pet-name").value = name;
             document.getElementById("suggestions").style.display = "none";
             
-            // 사이드바 활성화 표시
+            // S급 이론치 계산 (랜덤2, 보너스2.5 고정)
+            const guide = calculateIdealStats(selectedPet);
+            document.getElementById("inA").placeholder = `S급: ${guide.a}`;
+            document.getElementById("inD").placeholder = `S급: ${guide.d}`;
+            document.getElementById("inG").placeholder = `S급: ${guide.g}`;
+            document.getElementById("inH").placeholder = `S급: ${guide.h}`;
+            
             document.querySelectorAll("#pet-list-ui li").forEach(li => {
                 li.classList.toggle("active", li.textContent === name);
             });
-
-            // 가이드 수치(S급 기준) 미리보기 계산 (랜덤2, 보너스2.5 고정)
-            const guide = calculateGuide(selectedPet);
-            document.getElementById("inA").placeholder = `S급: ${Math.floor(guide.a)}`;
-            document.getElementById("inD").placeholder = `S급: ${Math.floor(guide.d)}`;
-            document.getElementById("inG").placeholder = `S급: ${Math.floor(guide.g)}`;
-            document.getElementById("inH").placeholder = `S급: ${Math.floor(guide.h)}`;
         }
 
-        function calculateGuide(pet) {
-            const calc = (coeff) => new Decimal(coeff).plus(2).plus(2.5).times(pet.initialCoefficient).div(100);
-            const iA = calc(pet.attackCoefficient);
-            const iD = calc(pet.defenseCoefficient);
-            const iG = calc(pet.agilityCoefficient);
-            const iH = calc(pet.healthCoefficient);
+        // 핵심 계산 로직 (계수 이름 정적 매칭)
+        function calculateIdealStats(pet) {
+            const ic = new Decimal(pet.initialCoefficient);
+            const r = 2; // S급 랜덤치
+            const b = 2.5; // 보너스 평균
+
+            const iH = new Decimal(pet.healthCoefficient).plus(r).plus(b).mul(ic).div(100);
+            const iA = new Decimal(pet.attackCoefficient).plus(r).plus(b).mul(ic).div(100);
+            const iD = new Decimal(pet.defenseCoefficient).plus(r).plus(b).mul(ic).div(100);
+            const iG = new Decimal(pet.agilityCoefficient).plus(r).plus(b).mul(ic).div(100);
 
             return {
-                a: iH.mul(0.1).add(iA).add(iD.mul(0.1)).add(iG.mul(0.05)),
-                d: iH.mul(0.1).add(iA.mul(0.1)).add(iD).add(iG.mul(0.05)),
-                g: iG,
-                h: iH.mul(4).add(iA).add(iD).add(iG)
+                a: iH.mul(0.1).add(iA).add(iD.mul(0.1)).add(iG.mul(0.05)).floor().toNumber(),
+                d: iH.mul(0.1).add(iA.mul(0.1)).add(iD).add(iG.mul(0.05)).floor().toNumber(),
+                g: iG.floor().toNumber(),
+                h: iH.mul(4).add(iA).add(iD).add(iG).floor().toNumber()
             };
         }
 
-        // 검색 자동완성
-        const nameInput = document.getElementById("pet-name");
-        const suggestionBox = document.getElementById("suggestions");
-
-        nameInput.addEventListener("input", () => {
-            const val = nameInput.value.trim();
-            suggestionBox.innerHTML = "";
-            if (!val) { suggestionBox.style.display = "none"; return; }
-
-            const queryCho = getCho(val);
-            const matches = Object.keys(petData).filter(n => n.includes(val) || getCho(n).includes(queryCho));
-
-            if (matches.length > 0) {
-                suggestionBox.style.display = "block";
-                matches.slice(0, 10).forEach(m => {
-                    const li = document.createElement("li");
-                    li.textContent = m;
-                    li.onclick = () => selectPet(m);
-                    suggestionBox.appendChild(li);
-                });
-            } else {
-                suggestionBox.style.display = "none";
-            }
-        });
-
-        // 사이드바 토글
-        document.getElementById("toggle-pets-btn").onclick = () => {
-            document.getElementById("pet-sidebar").classList.toggle("visible");
-            document.getElementById("main-container").classList.toggle("shrunk");
-        };
-
-        // 메인 계산 로직 (기존 정밀도 유지)
+        // 분석 실행
         document.getElementById("calculate-btn").onclick = () => {
-            if (!selectedPet) { alert("페트를 먼저 선택해 주세요."); return; }
+            if (!selectedPet) { alert("페트를 먼저 선택하세요."); return; }
 
-            const targetA = parseInt(document.getElementById("inA").value);
-            const targetD = parseInt(document.getElementById("inD").value);
-            const targetG = parseInt(document.getElementById("inG").value);
-            const targetH = parseInt(document.getElementById("inH").value);
-
-            if (isNaN(targetA) || isNaN(targetD) || isNaN(targetG) || isNaN(targetH)) {
-                alert("모든 수치를 입력해 주세요."); return;
-            }
+            const targetA = parseInt(document.getElementById("inA").value) || parseInt(document.getElementById("inA").placeholder);
+            const targetD = parseInt(document.getElementById("inD").value) || parseInt(document.getElementById("inD").placeholder);
+            const targetG = parseInt(document.getElementById("inG").value) || parseInt(document.getElementById("inG").placeholder);
+            const targetH = parseInt(document.getElementById("inH").value) || parseInt(document.getElementById("inH").placeholder);
 
             let hit = 0;
             let totalPossible = 0;
-            let sGradeHit = 0;
 
-            // 5^4 (랜덤) * 11^3 (보너스 조합) 전수 조사
+            // 전수 조사 (랜덤 -2~2, 보너스 조합 10)
             for (let rA = -2; rA <= 2; rA++) {
                 for (let rD = -2; rD <= 2; rD++) {
                     for (let rG = -2; rG <= 2; rG++) {
@@ -225,23 +180,20 @@
                                 for (let bD = 0; bD <= 10 - bA; bD++) {
                                     for (let bG = 0; bG <= 10 - bA - bD; bG++) {
                                         const bH = 10 - bA - bD - bG;
-                                        
                                         totalPossible++;
 
-                                        const iA = new Decimal(selectedPet.attackCoefficient).plus(rA).plus(bA).mul(selectedPet.initialCoefficient).div(100);
-                                        const iD = new Decimal(selectedPet.defenseCoefficient).plus(rD).plus(bD).mul(selectedPet.initialCoefficient).div(100);
-                                        const iG = new Decimal(selectedPet.agilityCoefficient).plus(rG).plus(bG).mul(selectedPet.initialCoefficient).div(100);
-                                        const iH = new Decimal(selectedPet.healthCoefficient).plus(rH).plus(bH).mul(selectedPet.initialCoefficient).div(100);
+                                        const ic = selectedPet.initialCoefficient;
+                                        const curIA = new Decimal(selectedPet.attackCoefficient + rA + bA).mul(ic).div(100);
+                                        const curID = new Decimal(selectedPet.defenseCoefficient + rD + bD).mul(ic).div(100);
+                                        const curIG = new Decimal(selectedPet.agilityCoefficient + rG + bG).mul(ic).div(100);
+                                        const curIH = new Decimal(selectedPet.healthCoefficient + rH + bH).mul(ic).div(100);
 
-                                        const curA = iH.mul(0.1).add(iA).add(iD.mul(0.1)).add(iG.mul(0.05)).floor();
-                                        const curD = iH.mul(0.1).add(iA.mul(0.1)).add(iD).add(iG.mul(0.05)).floor();
-                                        const curG = iG.floor();
-                                        const curH = iH.mul(4).add(iA).add(iD).add(iG).floor();
+                                        const resA = curIH.mul(0.1).add(curIA).add(curID.mul(0.1)).add(curIG.mul(0.05)).floor();
+                                        const resD = curIH.mul(0.1).add(curIA.mul(0.1)).add(curID).add(curIG.mul(0.05)).floor();
+                                        const resG = curIG.floor();
+                                        const resH = curIH.mul(4).add(curIA).add(curID).add(curIG).floor();
 
-                                        if (curA.eq(targetA) && curD.eq(targetD) && curG.eq(targetG) && curH.eq(targetH)) {
-                                            hit++;
-                                            if (rA === 2 && rD === 2 && rG === 2 && rH === 2) sGradeHit++;
-                                        }
+                                        if (resA.eq(targetA) && resD.eq(targetD) && resG.eq(targetG) && resH.eq(targetH)) hit++;
                                     }
                                 }
                             }
@@ -251,21 +203,13 @@
             }
 
             const resDiv = document.getElementById("result");
-            if (hit === 0) {
-                resDiv.innerHTML = "입력하신 수치로 나올 수 있는 <br>계산 결과가 없습니다.";
-            } else {
-                const sProb = ((sGradeHit / hit) * 100).toFixed(2);
-                const spawnProb = ((hit / totalPossible) * 100).toFixed(4);
-                resDiv.innerHTML = `
-                    분석 결과 매칭 케이스: <span class="hl">${hit}개</span><br>
-                    S급(All+2) 확률: <span class="hl">${sProb}%</span><br>
-                    해당 수치 출현율: <span class="hl">${spawnProb}%</span><br>
-                    <small style="color:#888;">* 모든 결과는 소숫점 50자리 정밀 연산 결과입니다.</small>
-                `;
-            }
+            resDiv.innerHTML = hit > 0 
+                ? `분석 완료: <span style="color:red; font-weight:bold;">${hit}</span>개의 가능성 발견!`
+                : "입력한 수치로 나올 수 있는 조합이 없습니다.";
         };
 
-        window.onload = loadData;
+        // 초기화
+        window.onload = renderPetList;
     </script>
 </body>
 </html>
