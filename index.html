@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>페트 정밀 분석기 (JSON 기반)</title>
+    <title>페트 역추적 계산기</title>
     <style>
         :root {
             --bg-main: #0b101a; --bg-panel: #161a24; --border-main: #252e3f;
@@ -15,30 +15,33 @@
             font-family: 'Pretendard', sans-serif; color: var(--text-main);
             display: flex; flex-direction: column; align-items: center; min-height: 100vh;
         }
-        .container { max-width: 450px; width: 90%; margin: 30px auto; padding: 25px; background: var(--bg-panel); border: 1px solid var(--border-main); border-radius: 16px; }
-        h1 { text-align: center; margin-bottom: 20px; font-size: 20px; color: var(--text-gold); }
+        .container { max-width: 450px; width: 90%; margin: 30px auto; padding: 25px; background: var(--bg-panel); border: 1px solid var(--border-main); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { text-align: center; margin-bottom: 20px; font-size: 20px; color: var(--text-gold); letter-spacing: -1px; }
         .input-group { position: relative; margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-gold); font-weight: bold; }
-        #pet-name { width: 100%; padding: 12px; font-size: 15px; background: var(--input-bg); border: 1px solid var(--border-main); color: #fff; border-radius: 8px; box-sizing: border-box; }
+        #pet-name { width: 100%; padding: 14px; font-size: 15px; background: var(--input-bg); border: 1px solid var(--border-main); color: #fff; border-radius: 8px; box-sizing: border-box; }
+        #pet-name:focus { border-color: var(--accent-gold); outline: none; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .stat-row { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; }
+        .stat-row { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); }
         .stat-label { font-size: 12px; color: var(--text-sub); margin-bottom: 8px; display: block; text-align: center; }
-        input[type="number"] { width: 100%; height: 40px; border: 1px solid var(--border-main); background: var(--input-bg); color: #fff; text-align: center; border-radius: 6px; font-size: 16px; font-weight: bold; box-sizing: border-box; }
-        #suggestions { list-style: none; padding: 0; margin: 0; position: absolute; width: 100%; background: #1a2233; border: 1px solid var(--accent-gold); z-index: 10; display: none; border-radius: 8px; max-height: 150px; overflow-y: auto; }
-        #suggestions li { padding: 10px; border-bottom: 1px solid var(--border-main); cursor: pointer; font-size: 13px; }
-        #calculate-btn { width: 100%; padding: 15px; background: var(--accent-gold); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 15px; }
+        input[type="number"] { width: 100%; height: 40px; border: 1px solid var(--border-main); background: var(--input-bg); color: #fff; text-align: center; border-radius: 6px; font-size: 16px; font-weight: bold; }
+        #suggestions { list-style: none; padding: 0; margin: 0; position: absolute; width: 100%; background: #1a2233; border: 1px solid var(--accent-gold); z-index: 10; display: none; border-radius: 8px; max-height: 200px; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        #suggestions li { padding: 12px; border-bottom: 1px solid var(--border-main); cursor: pointer; font-size: 14px; color: #fff; }
+        #suggestions li:hover { background: #252e3f; }
+        #calculate-btn { width: 100%; padding: 16px; background: var(--accent-gold); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; color: #000; transition: transform 0.1s; }
+        #calculate-btn:active { transform: scale(0.98); }
         #calculate-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
-        .result { margin-top: 20px; padding: 20px; background: var(--input-bg); border-radius: 10px; text-align: center; border: 1px solid var(--border-main); min-height: 60px; }
-        #loading { display: none; color: var(--accent-gold); margin-top: 10px; font-size: 12px; text-align: center; }
+        .result { margin-top: 20px; padding: 20px; background: var(--input-bg); border-radius: 10px; text-align: center; border: 1px solid var(--border-main); min-height: 80px; }
+        #loading { display: none; color: var(--accent-gold); margin-top: 15px; font-size: 13px; text-align: center; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>페트 정밀 분석기</h1>
+        <h1>페트 역추적 분석기</h1>
 
         <div class="input-group">
-            <label for="pet-name">페트 선택</label>
-            <input type="text" id="pet-name" placeholder="데이터 로드 중..." autocomplete="off" disabled>
+            <label for="pet-name">페트 이름 (초성 가능)</label>
+            <input type="text" id="pet-name" placeholder="데이터 로딩 중..." autocomplete="off" disabled>
             <ul id="suggestions"></ul>
         </div>
 
@@ -50,29 +53,17 @@
         </div>
 
         <button id="calculate-btn" disabled>페트를 선택해주세요</button>
-        <div id="loading">분석 알고리즘 가동 중...</div>
-        <div id="result" class="result">정보를 입력하고 계산을 눌러주세요.</div>
+        <div id="loading">모든 경우의 수 계산 중...</div>
+        <div id="result" class="result">정보를 입력하고 분석을 눌러주세요.</div>
     </div>
 
     <script>
         let petData = {};
 
-        // 업로드 파일의 정밀도 보정 로직 (Rounding)
+        // 부동 소수점 오차 보정 함수
         const p = (num) => Math.round(num * 1e10) / 1e10;
 
-        async function init() {
-            try {
-                const res = await fetch('pet.json?t=' + Date.now());
-                petData = await res.json();
-                document.getElementById("pet-name").disabled = false;
-                document.getElementById("pet-name").placeholder = "페트 이름 입력";
-            } catch (e) {
-                document.getElementById("result").innerText = "pet.json 파일을 찾을 수 없습니다.";
-            }
-        }
-        init();
-
-        // 초성 검색 로직
+        // 초성 추출 함수
         function getChosung(str) {
             const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
             let res = "";
@@ -84,15 +75,31 @@
             return res;
         }
 
+        // 1. pet.json 데이터 로드
+        async function init() {
+            try {
+                const res = await fetch('pet.json?t=' + Date.now());
+                petData = await res.json();
+                const nameInput = document.getElementById("pet-name");
+                nameInput.disabled = false;
+                nameInput.placeholder = "페트 이름 입력";
+            } catch (e) {
+                document.getElementById("result").innerText = "pet.json 파일을 찾을 수 없습니다.";
+            }
+        }
+        init();
+
         const nameInput = document.getElementById("pet-name");
         const suggest = document.getElementById("suggestions");
 
+        // 2. 검색 및 자동완성 (초성 지원)
         nameInput.addEventListener("input", () => {
             const val = nameInput.value.trim();
             suggest.innerHTML = "";
             if (!val) { suggest.style.display = "none"; return; }
             const qCho = getChosung(val);
-            const matches = Object.keys(petData).filter(n => n.includes(val) || getChosung(n).includes(qCho)).slice(0, 8);
+            const matches = Object.keys(petData).filter(n => n.includes(val) || getChosung(n).includes(qCho)).slice(0, 10);
+            
             if(matches.length > 0) {
                 suggest.style.display = "block";
                 matches.forEach(m => {
@@ -109,6 +116,7 @@
             } else { suggest.style.display = "none"; }
         });
 
+        // 3. 분석 버튼 클릭 시 실행
         document.getElementById("calculate-btn").addEventListener("click", () => {
             const pet = petData[nameInput.value];
             const tA = parseInt(document.getElementById("in-attack").value);
@@ -117,7 +125,7 @@
             const tH = parseInt(document.getElementById("in-health").value);
 
             if(isNaN(tA) || isNaN(tD) || isNaN(tG) || isNaN(tH)) {
-                alert("모든 스탯을 입력해주세요."); return;
+                alert("인게임 스탯을 모두 입력해주세요."); return;
             }
 
             document.getElementById("loading").style.display = "block";
@@ -127,7 +135,7 @@
                 let matched = 0, sGrade = 0;
                 const ic = pet.initialCoefficient;
 
-                // 8중 루프: 가중치(-2~2) 및 보너스 스탯(합 10) 분배
+                // 8중 루프: 가중치(R: -2~2) 및 보너스(B: 합 10) 분배 시뮬레이션
                 for (let aR = -2; aR <= 2; aR++) {
                     for (let dR = -2; dR <= 2; dR++) {
                         for (let gR = -2; gR <= 2; gR++) {
@@ -137,23 +145,23 @@
                                         for (let gB = 0; gB <= 10 - aB - dB; gB++) {
                                             const hB = 10 - aB - dB - gB;
 
-                                            // pet.json의 계수에 가중치와 보너스를 더함
+                                            // 사용자 JSON 순서: health, attack, defense, agility 순으로 매칭
+                                            const iH = p((pet.healthCoefficient + hR + hB) * ic / 100);
                                             const iA = p((pet.attackCoefficient + aR + aB) * ic / 100);
                                             const iD = p((pet.defenseCoefficient + dR + dB) * ic / 100);
                                             const iG = p((pet.agilityCoefficient + gR + gB) * ic / 100);
-                                            const iH = p((pet.healthCoefficient + hR + hB) * ic / 100);
 
-                                            // 순발력 선검증 (성능 최적화)
+                                            // 순발력 선검증 (Math.floor(iG)가 입력값과 같아야 함)
                                             if (Math.floor(iG) !== tG) continue;
 
-                                            // 업로드된 파일의 공식 적용
-                                            const cA = Math.floor(p(iH * 0.1 + iA + iD * 0.1 + iG * 0.05));
-                                            const cD = Math.floor(p(iH * 0.1 + iA * 0.1 + iD + iG * 0.05));
-                                            const cH = Math.floor(p(iH * 4 + iA + iD + iG));
+                                            // 짜얄계산기 특유의 보정 합산 공식
+                                            const calcA = Math.floor(p(iH * 0.1 + iA + iD * 0.1 + iG * 0.05));
+                                            const calcD = Math.floor(p(iH * 0.1 + iA * 0.1 + iD + iG * 0.05));
+                                            const calcH = Math.floor(p(iH * 4 + iA + iD + iG));
 
-                                            if (cA === tA && cD === tD && cH === tH) {
+                                            if (calcA === tA && calcD === tD && calcH === tH) {
                                                 matched++;
-                                                // 모든 가중치가 2(정석)일 때 S급 판정
+                                                // 모든 가중치가 최대치(2)인 경우를 S급으로 판정
                                                 if (aR === 2 && dR === 2 && gR === 2 && hR === 2) sGrade++;
                                             }
                                         }
@@ -165,21 +173,22 @@
                 }
 
                 if (matched === 0) {
-                    document.getElementById("result").innerHTML = "<b style='color:#ff6b6b'>분석 불가</b><br><small>JSON의 계수와 입력한 스탯이 일치하지 않습니다.</small>";
+                    document.getElementById("result").innerHTML = "<b style='color:#ff6b6b; font-size:18px;'>분석 불가</b><br><small style='color:var(--text-sub)'>JSON의 계수와 입력한 스탯이 논리적으로 맞지 않습니다.</small>";
                 } else {
                     let prob = (sGrade / matched) * 100;
                     let displayProb = prob >= 100 ? "99.99" : prob.toFixed(2);
                     document.getElementById("result").innerHTML = `
-                        <div style="font-size:18px; color:var(--text-gold);">S급 확률: <strong>${displayProb}%</strong></div>
-                        <div style="font-size:12px; color:var(--text-sub); margin-top:8px;">
-                            예상 시도: <strong>${sGrade > 0 ? (matched/sGrade).toFixed(1) : '∞'}</strong>회<br>
-                            <span style="opacity:0.5">(매칭 케이스: ${matched}개)</span>
+                        <div style="font-size:14px; color:var(--text-sub); margin-bottom:10px;">분석된 경우의 수: ${matched}개</div>
+                        <div style="font-size:20px; color:var(--text-gold);">S급 확률: <strong>${displayProb}%</strong></div>
+                        <div style="font-size:13px; color:var(--text-sub); margin-top:10px;">
+                            ${sGrade > 0 ? `성공 기대값: 약 <strong>${(matched/sGrade).toFixed(1)}</strong>마리 중 1마리` : '이 스탯 조합에서는 S급이 나올 수 없습니다.'}
                         </div>`;
                 }
                 document.getElementById("loading").style.display = "none";
             }, 50);
         });
 
+        // 외부 클릭 시 제안 창 닫기
         document.addEventListener("click", (e) => { if(e.target !== nameInput) suggest.style.display = "none"; });
     </script>
 </body>
