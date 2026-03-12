@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>계산기 </title>
+    <title>계산기</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
     <style>
         :root { --bg: #0b101a; --panel: #161a24; --gold: #e6b94d; --text: #d1d8e0; --btn: #28a745; --input-bg: #070a10; }
@@ -43,11 +43,11 @@
 
         <div style="position: relative;">
             <label>페트 이름 검색</label>
-            <input type="text" id="pet-search" placeholder="이름 또는 초성 입력 (예: ㄱㄱㄹㅅ)" autocomplete="off">
+            <input type="text" id="pet-search" placeholder="이름 또는 초성 입력" autocomplete="off">
             <ul id="suggestions"></ul>
         </div>
 
-        <label>공격 | 방어 | 순발 | 체력 (S급 이론치 가이드)</label>
+        <label>현재 능력치 입력 (공격 | 방어 | 순발 | 체력)</label>
         <div class="stat-grid">
             <input type="number" id="inA" placeholder="공">
             <input type="number" id="inD" placeholder="방">
@@ -68,7 +68,6 @@
         let petData = {};
         let selectedPet = null;
 
-        // 1. GitHub 환경에서 pet.json 불러오기
         async function loadPetData() {
             try {
                 const response = await fetch('pet.json');
@@ -82,7 +81,6 @@
             }
         }
 
-        // 초성 검색 엔진
         function getCho(s) {
             const c = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
             let r = "";
@@ -112,47 +110,32 @@
                         sIn.value = name;
                         selectedPet = petData[name];
                         sBox.style.display = "none";
-                        updatePlaceholder(selectedPet);
+                        document.getElementById('result').innerHTML = `<span class="hl">${name}</span> 페트가 선택되었습니다.`;
                     };
                     sBox.appendChild(li);
                 });
             }
         };
 
-        // S급 가이드 placeholder 업데이트
-        function updatePlaceholder(pet) {
-            const ic = new Decimal(pet.initialCoefficient);
-            const calc = (c) => new Decimal(c).plus(2).plus(2.5).mul(ic).div(100);
-            const iH = calc(pet.healthCoefficient);
-            const iA = calc(pet.attackCoefficient);
-            const iD = calc(pet.defenseCoefficient);
-            const iG = calc(pet.agilityCoefficient);
-
-            document.getElementById('inA').placeholder = iH.mul(0.1).add(iA).add(iD.mul(0.1)).add(iG.mul(0.05)).floor();
-            document.getElementById('inD').placeholder = iH.mul(0.1).add(iA.mul(0.1)).add(iD).add(iG.mul(0.05)).floor();
-            document.getElementById('inG').placeholder = iG.floor();
-            document.getElementById('inH').placeholder = iH.mul(4).add(iA).add(iD).add(iG).floor();
-            
-            document.getElementById('result').innerHTML = `<span class="hl">${sIn.value}</span> 페트가 선택되었습니다.`;
-        }
-
-        // 2. 메인 분석 로직
         document.getElementById('calculate-btn').onclick = function() {
             if(!selectedPet) { alert("페트를 먼저 선택하세요!"); return; }
 
-            const tA = parseInt(document.getElementById('inA').value) || parseInt(document.getElementById('inA').placeholder);
-            const tD = parseInt(document.getElementById('inD').value) || parseInt(document.getElementById('inD').placeholder);
-            const tG = parseInt(document.getElementById('inG').value) || parseInt(document.getElementById('inG').placeholder);
-            const tH = parseInt(document.getElementById('inH').value) || parseInt(document.getElementById('inH').placeholder);
+            const tA = parseInt(document.getElementById('inA').value);
+            const tD = parseInt(document.getElementById('inD').value);
+            const tG = parseInt(document.getElementById('inG').value);
+            const tH = parseInt(document.getElementById('inH').value);
+
+            if(isNaN(tA) || isNaN(tD) || isNaN(tG) || isNaN(tH)) {
+                alert("모든 능력치를 숫자로 입력해 주세요.");
+                return;
+            }
 
             document.getElementById('loading').style.display = "block";
 
-            // 비동기 처리를 위해 setTimeout 사용 (UI 멈춤 방지)
             setTimeout(() => {
                 let hitCount = 0;
                 let sGradeCount = 0;
-                const totalCases = Math.pow(5, 4) * 286; // 625 * 286 = 178,750가지 조합
-
+                const totalCases = 178750; 
                 const ic = new Decimal(selectedPet.initialCoefficient);
 
                 for (let rA = -2; rA <= 2; rA++) {
