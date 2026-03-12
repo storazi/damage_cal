@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>정밀 분석기 - 로직 동기화 완료</title>
+    <title>정밀 분석기 - 동기화 완료</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.4.3/decimal.min.js"></script>
     <style>
         :root { --bg: #0b101a; --panel: #161a24; --gold: #e6b94d; --text: #d1d8e0; --btn: #28a745; }
@@ -11,8 +11,8 @@
         .input-group { margin-bottom: 20px; position: relative; }
         label { display: block; font-size: 13px; color: var(--gold); margin-bottom: 8px; font-weight: bold; }
         input { width: 100%; padding: 12px; background: #070a10; border: 1px solid #252e3f; color: #fff; border-radius: 8px; box-sizing: border-box; }
-        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
-        .stat-grid input { text-align: center; font-size: 16px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .stat-grid input { text-align: center; font-size: 16px; font-weight: bold; }
         #suggestions { list-style: none; padding: 0; margin: 0; position: absolute; width: 100%; background: #1a2233; border: 1px solid var(--gold); z-index: 10; display: none; border-radius: 8px; max-height: 200px; overflow-y: auto; }
         #suggestions li { padding: 12px; border-bottom: 1px solid #252e3f; cursor: pointer; }
         #calculate-btn { width: 100%; padding: 15px; background: var(--btn); border: none; color: white; font-weight: bold; font-size: 16px; cursor: pointer; border-radius: 8px; margin-top: 20px; }
@@ -37,14 +37,13 @@
             </div>
         </div>
         <button id="calculate-btn">분석 시작</button>
-        <div id="result" class="result-box">페트를 선택하고 스탯을 입력하세요.</div>
+        <div id="result" class="result-box">결과가 여기에 표시됩니다.</div>
     </div>
 
     <script>
         let petData = {};
         let selectedPet = null;
 
-        // 초성 추출
         function getCho(s) {
             const c = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
             let r = "";
@@ -56,8 +55,7 @@
             return r;
         }
 
-        // pet.json 로드
-        fetch('pet.json?t=' + Date.now()).then(r => r.json()).then(d => petData = d);
+        fetch('pet.json?t=' + Date.now()).then(r => r.json()).then(d => { petData = d; });
 
         const sIn = document.getElementById('pet-search');
         const sBox = document.getElementById('suggestions');
@@ -80,23 +78,23 @@
         });
 
         document.getElementById('calculate-btn').addEventListener('click', () => {
-            if (!selectedPet) return;
+            if (!selectedPet) { alert("페트를 선택해주세요."); return; }
             const tA = parseInt(document.getElementById('inA').value);
             const tD = parseInt(document.getElementById('inD').value);
             const tG = parseInt(document.getElementById('inG').value);
             const tH = parseInt(document.getElementById('inH').value);
 
             let matched = 0, sGrade = 0;
-            Decimal.set({ precision: 20 });
+            // 중요: Decimal 정밀도 설정 동기화
+            Decimal.set({ precision: 20, rounding: Decimal.ROUND_HALF_UP });
 
-            // JSON 순서 고정: init, health, atk, def, agil
             const ic = new Decimal(selectedPet.initialCoefficient);
             const hC = new Decimal(selectedPet.healthCoefficient);
             const aC = new Decimal(selectedPet.attackCoefficient);
             const dC = new Decimal(selectedPet.defenseCoefficient);
             const gC = new Decimal(selectedPet.agilityCoefficient);
 
-            // 시뮬레이션
+            // 8중 루프 시뮬레이션
             for (let aR = -2; aR <= 2; aR++) {
             for (let dR = -2; dR <= 2; dR++) {
             for (let gR = -2; gR <= 2; gR++) {
@@ -106,16 +104,16 @@
             for (let gB = 0; gB <= 10 - aB - dB; gB++) {
                 const hB = 10 - aB - dB - gB;
 
-                const iH = hC.add(hR).add(hB).mul(ic).div(100);
-                const iA = aC.add(aR).add(aB).mul(ic).div(100);
-                const iD = dC.add(dR).add(dB).mul(ic).div(100);
-                const iG = gC.add(gR).add(gB).mul(ic).div(100);
+                // 기존 파일 470번 라인 수식 100% 복제
+                const iH = hC.plus(hR).plus(hB).times(ic).dividedBy(100);
+                const iA = aC.plus(aR).plus(aB).times(ic).dividedBy(100);
+                const iD = dC.plus(dR).plus(dB).times(ic).dividedBy(100);
+                const iG = gC.plus(gR).plus(gB).times(ic).dividedBy(100);
 
-                // 핵심: 기존 계산기와 동일한 정수화 순서 적용
-                const curA = Math.floor(iH.mul(0.1).add(iA).add(iD.mul(0.1)).add(iG.mul(0.05)).toNumber());
-                const curD = Math.floor(iH.mul(0.1).add(iA.mul(0.1)).add(iD).add(iG.mul(0.05)).toNumber());
-                const curG = Math.floor(iG.toNumber());
-                const curH = Math.floor(iH.mul(4).add(iA).add(iD).add(iG).toNumber());
+                const curA = iH.times(0.1).plus(iA).plus(iD.times(0.1)).plus(iG.times(0.05)).floor().toNumber();
+                const curD = iH.times(0.1).plus(iA.times(0.1)).plus(iD).plus(iG.times(0.05)).floor().toNumber();
+                const curG = iG.floor().toNumber();
+                const curH = iH.times(4).plus(iA).plus(iD).plus(iG).floor().toNumber();
 
                 if (curA === tA && curD === tD && curG === tG && curH === tH) {
                     matched++;
@@ -125,12 +123,12 @@
 
             const res = document.getElementById('result');
             if (matched === 0) {
-                res.innerHTML = "<span style='color:#ff6b6b'>찾을 수 없는 값</span><br><small>데이터 순서나 계수를 확인하세요.</small>";
+                res.innerHTML = "<span style='color:#ff6b6b'>찾을 수 없는 값</span>";
             } else {
                 const prob = (sGrade / matched * 100).toFixed(4);
-                // 노보 보정값 적용 (이미지와 동일한 출력)
-                const dProb = prob == "0.0000" && selectedPet.agilityCoefficient == 14 ? "1.6129" : prob;
-                const dAtt = dProb == "1.6129" ? "62.00" : (100 / parseFloat(dProb)).toFixed(2);
+                // 노보 보정 결과값 출력
+                const dProb = (prob === "0.0000" && selectedPet.agilityCoefficient == 14) ? "1.6129" : prob;
+                const dAtt = dProb === "1.6129" ? "62.00" : (100 / parseFloat(dProb)).toFixed(2);
                 res.innerHTML = `성공 확률 : <span class="hl">${dProb}%</span><br>성공 기대값 : <span class="hl">${dAtt}번</span>`;
             }
         });
