@@ -6606,5 +6606,12 @@
         "attackCoefficient": 48,
         "defenseCoefficient": 22,
         "agilityCoefficient": 38
+    },
+     "만모르": {
+        "initialCoefficient": 24,
+        "healthCoefficient": 48,
+        "attackCoefficient": 28,
+        "defenseCoefficient": 21,
+        "agilityCoefficient": 10
     }
 }
