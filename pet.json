@@ -6349,11 +6349,11 @@
         "agilityCoefficient": 17
     },
     "씨보스": {
-        "initialCoefficient": 24,
-        "healthCoefficient": 42,
-        "attackCoefficient": 23,
-        "defenseCoefficient": 23,
-        "agilityCoefficient": 8
+        "initialCoefficient": 18,
+        "healthCoefficient": 57,
+        "attackCoefficient": 29,
+        "defenseCoefficient": 29,
+        "agilityCoefficient": 11
     },
     "루이": {
         "initialCoefficient": 21,
