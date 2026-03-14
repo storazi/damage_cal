@@ -6613,5 +6613,13 @@
         "attackCoefficient": 28,
         "defenseCoefficient": 21,
         "agilityCoefficient": 10
+    },
+    "우비석": {
+        "initialCoefficient": 19,
+        "healthCoefficient": 39,
+        "attackCoefficient": 39,
+        "defenseCoefficient": 42,
+        "agilityCoefficient": 42
     }
+
 }
