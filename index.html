@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>비흡연자의 쉬는시간 - 시가 계산기</title>
+    <title>젠이스스</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.6.0/decimal.min.js"></script>
 <style>
     /* 🎨 Cigar Style Dark Theme */
     :root {
@@ -39,11 +40,11 @@
         box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     }
 
-    h1 { 
-        text-align: center; 
-        margin-bottom: 25px; 
-        font-size: 26px; 
-        font-weight: 800; 
+    h1 {
+        text-align: center;
+        margin-bottom: 25px;
+        font-size: 26px;
+        font-weight: 800;
         background: var(--accent-gold);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -51,11 +52,11 @@
     }
 
     .intro {
-        margin-bottom: 25px; padding: 18px; 
+        margin-bottom: 25px; padding: 18px;
         background: rgba(255, 212, 71, 0.03);
-        border: 1px solid var(--border-gold); 
+        border: 1px solid var(--border-gold);
         border-radius: 16px;
-        line-height: 1.6; text-align: center; 
+        line-height: 1.6; text-align: center;
         color: var(--text-sub); font-size: 13px;
     }
 
@@ -65,11 +66,11 @@
     label { display: block; margin-bottom: 10px; font-size: 14px; font-weight: 600; color: var(--text-gold); }
 
     #pet-name {
-        width: 100%; padding: 16px; font-size: 16px; 
+        width: 100%; padding: 16px; font-size: 16px;
         background: #000;
         border: 1px solid var(--border-main);
         color: #fff;
-        border-radius: 12px; box-sizing: border-box; 
+        border-radius: 12px; box-sizing: border-box;
         outline: none;
         transition: 0.3s;
     }
@@ -96,7 +97,7 @@
         text-align: center; background: #000; color: #fff;
         cursor: pointer; -moz-appearance: textfield;
     }
-    
+
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
@@ -118,8 +119,8 @@
         max-height: 240px; overflow-y: auto; z-index: 999; display: none;
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    #suggestions li { 
-        padding: 14px 16px; cursor: pointer; border-bottom: 1px solid #222; 
+    #suggestions li {
+        padding: 14px 16px; cursor: pointer; border-bottom: 1px solid #222;
         font-size: 15px; color: #ccc;
     }
     #suggestions li:hover { background-color: rgba(255, 149, 0, 0.15); color: #fff; }
@@ -135,15 +136,15 @@
     button#calculate-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 149, 0, 0.4); }
     button:disabled { opacity: 0.3; cursor: not-allowed; }
 
-    .result { 
-        margin-top: 25px; padding: 25px; 
-        background: #000; 
-        border: 1px solid var(--border-gold); 
-        border-radius: 18px; 
+    .result {
+        margin-top: 25px; padding: 25px;
+        background: #000;
+        border: 1px solid var(--border-gold);
+        border-radius: 18px;
         text-align: center;
         min-height: 60px;
     }
-    
+
     #loading { display: none; text-align: center; margin-top: 15px; color: var(--text-gold); font-weight: 500; }
 
     footer { text-align: center; margin: 30px 0; width: 100%; }
@@ -151,7 +152,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>시가 계산기</h1>
+        <h1>젠이스 계산기</h1>
         <div class="intro">
             <strong>Update : 2026/02/21</strong><br>
             정석 대비 <strong>차이값(+/-)</strong>을 입력하세요.<br>
@@ -177,12 +178,17 @@
 
     <script>
         let petData = {};
+        let currentPet = null;
         let currentIdealStats = null;
+        let currentKU = null;
 
-        // 데이터 로드
+        /* ========= ESET (보정계수 후보) ========= */
+        const ESET = Array.from({length: ((575-435)/5)+1}, (_,i) => 575 - i*5);
+
+        /* ========= 데이터 로드 ========= */
         async function loadPetData() {
             try {
-                const response = await fetch('pet.json');
+                const response = await fetch('제니스_pet.json');
                 if (!response.ok) throw new Error('파일 없음');
                 petData = await response.json();
                 const nameInput = document.getElementById("pet-name");
@@ -196,7 +202,7 @@
         }
         loadPetData();
 
-        // 헬퍼 함수들
+        /* ========= 헬퍼 ========= */
         function step(id, val) { const el = document.getElementById(id); el.value = parseInt(el.value || 0) + val; }
         function resetVal(el) { el.value = 0; el.select(); }
         function getChosung(str) {
@@ -210,28 +216,154 @@
             return result;
         }
 
-        // 정석 스탯 계산식
+        /* ========= k/u 추정 (Decimal.js) ========= */
+        function solveUFromSG(SG, e) {
+            try {
+                if (!SG || ![SG.hp, SG.atk, SG.def, SG.agi].every(Number.isFinite)) return null;
+                Decimal.set({ precision: 50, rounding: Decimal.ROUND_HALF_UP });
+
+                const eD = new Decimal(e);
+                const f = eD.dividedBy(10000);
+                const d = new Decimal(SG.agi).times(10000).dividedBy(eD).minus(4.5);
+                const dRound = d.round();
+                const dPlus45 = dRound.plus(4.5);
+
+                const rhs1 = new Decimal(SG.hp).minus(dPlus45.times(f)).dividedBy(f);
+                const rhs2 = new Decimal(SG.atk).minus(dPlus45.times(f).times(0.05)).dividedBy(f);
+                const rhs3 = new Decimal(SG.def).minus(dPlus45.times(f).times(0.05)).dividedBy(f);
+
+                let A = [
+                    [new Decimal(4), new Decimal(1), new Decimal(1), rhs1],
+                    [new Decimal(0.1), new Decimal(1), new Decimal(0.1), rhs2],
+                    [new Decimal(0.1), new Decimal(0.1), new Decimal(1), rhs3],
+                ];
+                for (let i = 0; i < 3; i++) {
+                    let mr = i, mv = A[i][i].abs();
+                    for (let j = i+1; j < 3; j++) { const t = A[j][i].abs(); if (t.greaterThan(mv)) { mr=j; mv=t; } }
+                    if (mr !== i) { const tmp = A[i]; A[i] = A[mr]; A[mr] = tmp; }
+                    const piv = A[i][i];
+                    for (let j = i; j < 4; j++) A[i][j] = A[i][j].dividedBy(piv);
+                    for (let k = 0; k < 3; k++) {
+                        if (k === i) continue;
+                        const fac = A[k][i];
+                        for (let j = i; j < 4; j++) A[k][j] = A[k][j].minus(fac.times(A[i][j]));
+                    }
+                }
+
+                const u_hp = A[0][3].minus(4.5).round();
+                const u_atk = A[1][3].minus(4.5).round();
+                const u_def = A[2][3].minus(4.5).round();
+                const u_agi = dRound;
+
+                const r2 = x => new Decimal(x).toDecimalPlaces(2);
+                const hp_chk = r2(f.times(u_hp.plus(4.5).times(4).plus(u_atk.plus(4.5)).plus(u_def.plus(4.5)).plus(u_agi.plus(4.5))));
+                const atk_chk = r2(f.times(u_hp.plus(4.5).times(0.1).plus(u_atk.plus(4.5)).plus(u_def.plus(4.5).times(0.1)).plus(u_agi.plus(4.5).times(0.05))));
+                const def_chk = r2(f.times(u_hp.plus(4.5).times(0.1).plus(u_atk.plus(4.5).times(0.1)).plus(u_def.plus(4.5)).plus(u_agi.plus(4.5).times(0.05))));
+                const agi_chk = r2(f.times(u_agi.plus(4.5)));
+
+                const err = hp_chk.minus(r2(SG.hp)).abs()
+                    .plus(atk_chk.minus(r2(SG.atk)).abs())
+                    .plus(def_chk.minus(r2(SG.def)).abs())
+                    .plus(agi_chk.minus(r2(SG.agi)).abs());
+
+                return { u: {hp:+u_hp, atk:+u_atk, def:+u_def, agi:+u_agi}, e, sg_err:+err };
+            } catch(e) { return null; }
+        }
+
+        function s0FromKU(k, u) {
+            const fac = k / 100;
+            const vhp = (u.hp + 4.5) * fac;
+            const vatk = (u.atk + 4.5) * fac;
+            const vdef = (u.def + 4.5) * fac;
+            const vagi = (u.agi + 4.5) * fac;
+            return [
+                Math.floor(vhp*4 + vatk + vdef + vagi),
+                Math.floor(vhp*0.1 + vatk + vdef*0.1 + vagi*0.05),
+                Math.floor(vhp*0.1 + vatk*0.1 + vdef + vagi*0.05),
+                Math.floor(vagi)
+            ];
+        }
+
+        function fitKFromS0(S0int, u) {
+            let best = null;
+            for (let k = 1; k <= 100; k++) {
+                const s = s0FromKU(k, u);
+                const l1 = Math.abs(s[0]-S0int[0]) + Math.abs(s[1]-S0int[1]) + Math.abs(s[2]-S0int[2]) + Math.abs(s[3]-S0int[3]);
+                const ok = (l1 === 0);
+                if (!best || (ok && !best.ok) || (!best.ok && l1 < best.l1)) best = {k, l1, ok};
+                if (ok) break;
+            }
+            return best;
+        }
+
+        function inferKU(S0, SG) {
+            const S0int = [Math.floor(S0.hp), Math.floor(S0.atk), Math.floor(S0.def), Math.floor(S0.agi)];
+            let best = null;
+            for (const e of ESET) {
+                const sol = solveUFromSG(SG, e);
+                if (!sol) continue;
+                const fit = fitKFromS0(S0int, sol.u);
+                if (!fit) continue;
+                const score = (fit.ok ? 0 : 1000) + fit.l1*10 + (sol.sg_err || 0);
+                const cand = {k: fit.k, u: sol.u, e, sg_err: sol.sg_err, s0_l1: fit.l1, s0_ok: fit.ok, score};
+                if (!best || cand.score < best.score) best = cand;
+            }
+            return best;
+        }
+
+        /* ========= 열거 엔진 (Decimal.js) ========= */
+        function enumerate(pku, obs) {
+            const k = new Decimal(pku.k);
+            const fac = k.dividedBy(100);
+            const u = pku.u;
+
+            let matches = 0, rank8 = 0;
+            const dist = {};
+
+            for (let ar = -2; ar <= 2; ar++)
+            for (let dr = -2; dr <= 2; dr++)
+            for (let gr = -2; gr <= 2; gr++)
+            for (let hr = -2; hr <= 2; hr++)
+            for (let ab = 0; ab <= 10; ab++)
+            for (let db = 0; db <= 10; db++)
+            for (let gb = 0; gb <= 10; gb++) {
+                const hb = 10 - ab - db - gb;
+                if (hb < 0 || hb > 10) continue;
+
+                const iA = new Decimal(u.atk + ar + ab).times(fac);
+                const iD = new Decimal(u.def + dr + db).times(fac);
+                const iG = new Decimal(u.agi + gr + gb).times(fac);
+                const iH = new Decimal(u.hp + hr + hb).times(fac);
+
+                const calcHp  = iH.times(4).plus(iA).plus(iD).plus(iG).floor().toNumber();
+                const calcAtk = iH.times(0.1).plus(iA).plus(iD.times(0.1)).plus(iG.times(0.05)).floor().toNumber();
+                const calcDef = iH.times(0.1).plus(iA.times(0.1)).plus(iD).plus(iG.times(0.05)).floor().toNumber();
+                const calcAgi = iG.floor().toNumber();
+
+                if (calcHp === obs[0] && calcAtk === obs[1] && calcDef === obs[2] && calcAgi === obs[3]) {
+                    matches++;
+                    const r = ar + dr + gr + hr;
+                    dist[r] = (dist[r] || 0) + 1;
+                    if (r === 8) rank8++;
+                }
+            }
+            return {matches, rank8, dist};
+        }
+
+        /* ========= 정석 스탯 계산 (S0에서 직접) ========= */
         function calculateIdealStats(pet) {
-            const bH = pet.healthCoefficient + 4.5;
-            const bA = pet.attackCoefficient + 4.5;
-            const bD = pet.defenseCoefficient + 4.5;
-            const bG = pet.agilityCoefficient + 4.5;
-            const iH = (bH * pet.initialCoefficient) / 100;
-            const iA = (bA * pet.initialCoefficient) / 100;
-            const iD = (bD * pet.initialCoefficient) / 100;
-            const iG = (bG * pet.initialCoefficient) / 100;
             return {
-                health: Math.floor(iH * 4 + iA + iD + iG),
-                attack: Math.floor(iH * 0.1 + iA + iD * 0.1 + iG * 0.05),
-                defense: Math.floor(iH * 0.1 + iA * 0.1 + iD + iG * 0.05),
-                agility: Math.floor(iG)
+                health: Math.floor(pet.s0.hp),
+                attack: Math.floor(pet.s0.atk),
+                defense: Math.floor(pet.s0.def),
+                agility: Math.floor(pet.s0.agi)
             };
         }
 
+        /* ========= 검색 자동완성 ========= */
         const petNameInput = document.getElementById("pet-name");
         const suggestions = document.getElementById("suggestions");
 
-        // 검색 자동완성
         petNameInput.addEventListener("input", () => {
             const query = petNameInput.value.trim();
             suggestions.innerHTML = "";
@@ -256,7 +388,10 @@
                     li.onclick = () => {
                         petNameInput.value = m.name;
                         suggestions.style.display = "none";
-                        currentIdealStats = calculateIdealStats(petData[m.name]);
+                        currentPet = petData[m.name];
+                        currentIdealStats = calculateIdealStats(currentPet);
+                        // k/u 사전 추정
+                        currentKU = inferKU(currentPet.s0, currentPet.sg);
                         document.getElementById("result").innerText = "차이값을 입력하고 계산을 눌러주세요.";
                     };
                     suggestions.appendChild(li);
@@ -264,10 +399,15 @@
             } else { suggestions.style.display = "none"; }
         });
 
-        // 실제 계산 로직
+        /* ========= 계산 ========= */
         document.getElementById("calculate-btn").addEventListener("click", () => {
             const name = petNameInput.value;
             if (!petData[name]) { alert("페트를 선택해주세요!"); return; }
+            if (!currentKU || !currentKU.s0_ok) {
+                alert("k/u 추정 실패: 이 펫의 데이터를 확인하세요.");
+                return;
+            }
+
             document.getElementById("loading").style.display = "block";
             document.getElementById("result").innerHTML = "";
 
@@ -277,53 +417,37 @@
                 const tD = currentIdealStats.defense + parseInt(document.getElementById("diff-defense").value || 0);
                 const tG = currentIdealStats.agility + parseInt(document.getElementById("diff-agility").value || 0);
 
-                const pet = petData[name];
-                let matched = 0, hCases = 0;
+                const res = enumerate({k: currentKU.k, u: currentKU.u}, [tH, tA, tD, tG]);
 
-                // 5차원 루프 (R: 초기치 보정, B: 포인트 투자)
-                for (let hR = -2; hR <= 2; hR++) {
-                    for (let aR = -2; aR <= 2; aR++) {
-                        for (let dR = -2; dR <= 2; dR++) {
-                            for (let gR = -2; gR <= 2; gR++) {
-                                for (let hB = 0; hB <= 10; hB++) {
-                                    for (let aB = 0; aB <= 10; aB++) {
-                                        for (let dB = 0; dB <= 10; dB++) {
-                                            const gB = 10 - hB - aB - dB;
-                                            if (gB < 0 || gB > 10) continue;
-                                            const iH = ((pet.healthCoefficient + hR + hB) * pet.initialCoefficient) / 100;
-                                            const iA = ((pet.attackCoefficient + aR + aB) * pet.initialCoefficient) / 100;
-                                            const iD = ((pet.defenseCoefficient + dR + dB) * pet.initialCoefficient) / 100;
-                                            const iG = ((pet.agilityCoefficient + gR + gB) * pet.initialCoefficient) / 100;
-                                            if (Math.floor(iH * 4 + iA + iD + iG) === tH &&
-                                                Math.floor(iH * 0.1 + iA + iD * 0.1 + iG * 0.05) === tA &&
-                                                Math.floor(iH * 0.1 + iA * 0.1 + iD + iG * 0.05) === tD &&
-                                                Math.floor(iG) === tG) {
-                                                matched++;
-                                                if (hR === 2 && aR === 2 && dR === 2 && gR === 2) hCases++;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (matched === 0) {
+                if (res.matches === 0) {
                     document.getElementById("result").textContent = "존재할 수 없는 스탯 조합입니다.";
                 } else {
-                    const p = ((hCases / matched) * 100).toFixed(2);
+                    const p = ((res.rank8 / res.matches) * 100).toFixed(2);
                     const realP = p === "100.00" ? "99.9" : p;
                     const expected = p > 0 ? (100 / p).toFixed(1) : "∞";
+
+                    // 등급 분포 생성
+                    const entries = Object.entries(res.dist).map(([r,c]) => ({r:+r, c})).sort((a,b) => b.r - a.r);
+                    let distHtml = entries.map(({r, c}) => {
+                        const pct = ((c / res.matches) * 100).toFixed(1);
+                        return `<span style="color:${r === 8 ? 'var(--text-gold)' : '#aaa'}">${r}등급: ${pct}%</span>`;
+                    }).join(' · ');
+
                     document.getElementById("result").innerHTML = `
                         <div style="font-size:20px; color:#fff;">성공 확률 : <strong style="color:var(--text-gold)">${realP}%</strong></div>
                         <div style="margin-top:10px; font-size:14px; color:var(--text-sub);">
                             성공 기대값 : 약 <strong>${expected}번</strong> 시도<br>
-                            <span style="font-size:11px; opacity:0.5;">(입력값: ${tH} ${tA} ${tD} ${tG})</span>
+                            <span style="font-size:11px; opacity:0.5;">(입력값: ${tH} ${tA} ${tD} ${tG} | k=${currentKU.k}, e=${currentKU.e})</span>
+                        </div>
+                        <div style="margin-top:14px; font-size:12px; color:var(--text-sub); line-height:1.8;">
+                            ${distHtml}
+                        </div>
+                        <div style="margin-top:8px; font-size:11px; opacity:0.4;">
+                            일치 조합: ${res.matches.toLocaleString()} / 178,750
                         </div>`;
                 }
                 document.getElementById("loading").style.display = "none";
-            }, 500);
+            }, 100);
         });
 
         // 배경 클릭 시 리스트 닫기
