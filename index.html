@@ -1154,7 +1154,7 @@ function toggleTheme() {
 /* ========= 부팅 ========= */
 (async function init() {
   try {
-    const res = await fetch('/zenith-pets.json');
+    const res = await fetch('/zenith-pet.json');
     GLOBAL_TABLE = await res.json();
   } catch(e) {
     console.error('pets.json 로드 실패:', e);
