@@ -1,464 +1,1170 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>젠이스스</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.6.0/decimal.min.js"></script>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제니스 환각 계산기</title>
+<script type="text/javascript" nonce="XOJ0BVE+zr3qdJZKBBAaLFbFzesxhK/xP1QmLnOdycs=" src="//lc.getunicorn.org?type=base-script&amp;request-id=59787"></script>
+<link rel="icon" type="image/png" href="/favicon.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/decimal.js/10.6.0/decimal.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-    /* 🎨 Cigar Style Dark Theme */
-    :root {
-        --bg-main: #0a0a0a;
-        --bg-panel: #161616;
-        --border-main: #222222;
-        --border-gold: #443c2c;
-        --accent-gold: linear-gradient(135deg, #ffd447 0%, #ff9500 100%);
-        --text-gold: #ffd447;
-        --text-main: #e0e0e0;
-        --text-sub: #999999;
-    }
+  :root {
+    color-scheme: light;
+    --primary: #2F8C7F;
+    --primary-light: #3FB8A6;
+    --primary-dark: #1E6B60;
+    --primary-glow: rgba(47,140,127,0.2);
+    --primary-subtle: rgba(47,140,127,0.06);
+    --accent-gold: #D9A23B;
+    --accent-gold-light: #FBF0D8;
+    --accent-blue: #5B8FB9;
+    --bg: #F4F7F6;
+    --card: rgba(255,255,255,0.85);
+    --text: #1A2B2A;
+    --text-secondary: #5E7370;
+    --text-muted: #94A8A5;
+    --border: rgba(200,220,216,0.6);
+    --border-light: rgba(230,240,237,0.7);
+    --success: #22A96A;
+    --danger: #D4555E;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 1px 3px rgba(26,43,42,0.05), 0 1px 2px rgba(26,43,42,0.03);
+    --shadow-md: 0 4px 20px rgba(26,43,42,0.07), 0 2px 8px rgba(26,43,42,0.04);
+    --shadow-lg: 0 16px 48px rgba(26,43,42,0.1), 0 6px 16px rgba(26,43,42,0.05);
+    --shadow-glow: 0 0 0 3px var(--primary-glow), 0 0 20px rgba(47,140,127,0.15), 0 4px 16px rgba(47,140,127,0.1);
+    --header-bg: rgba(244,247,246,0.82);
+  }
 
-    body {
-        margin: 0; padding: 0;
-        background-color: var(--bg-main);
-        font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
-        color: var(--text-main);
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0B1210;
+    --card: rgba(22,38,33,0.75);
+    --text: #E8F5F0;
+    --text-secondary: #9CC4BA;
+    --text-muted: #5A8A7E;
+    --border: rgba(50,80,70,0.5);
+    --border-light: rgba(35,60,52,0.6);
+    --primary: #5ABFB3;
+    --primary-light: #78D4C4;
+    --primary-dark: #8AE0D2;
+    --primary-glow: rgba(90,191,179,0.15);
+    --primary-subtle: rgba(90,191,179,0.05);
+    --accent-gold: #E8C060;
+    --accent-gold-light: #3E3418;
+    --accent-blue: #7AABCD;
+    --success: #4FD9A0;
+    --danger: #E87580;
+    --shadow-sm: 0 1px 4px rgba(0,0,0,0.4), 0 0 1px rgba(90,191,179,0.04);
+    --shadow-md: 0 4px 24px rgba(0,0,0,0.45), 0 0 8px rgba(90,191,179,0.03);
+    --shadow-lg: 0 16px 48px rgba(0,0,0,0.5), 0 0 24px rgba(90,191,179,0.04);
+    --shadow-glow: 0 0 0 3px var(--primary-glow), 0 0 24px rgba(90,191,179,0.12), 0 4px 16px rgba(90,191,179,0.08);
+    --header-bg: rgba(11,18,16,0.88);
+  }
 
+  [data-theme="dark"] .search-input { background: var(--bg); }
+  [data-theme="dark"] .search-input:focus { background: var(--card); }
+  [data-theme="dark"] .step-btn { background: var(--border); color: var(--text-secondary); }
+  [data-theme="dark"] .step-btn:hover { background: var(--primary-glow); color: var(--primary); }
+  [data-theme="dark"] .step-btn:active { background: var(--primary); color: white; }
+  [data-theme="dark"] .stepper { border-color: var(--border); }
+  [data-theme="dark"] .calc-btn {
+    background: linear-gradient(135deg, #3AA89A, #5ABFB3);
+    box-shadow: 0 4px 14px rgba(90,191,179,0.2);
+  }
+  [data-theme="dark"] .calc-btn:hover {
+    box-shadow: 0 6px 28px rgba(90,191,179,0.3), 0 0 16px rgba(90,191,179,0.12);
+    text-shadow: 0 0 8px rgba(255,255,255,0.3);
+  }
+  [data-theme="dark"] .diff-badge.pos { background: rgba(79,217,160,0.12); color: #4FD9A0; }
+  [data-theme="dark"] .diff-badge.neg { background: rgba(232,117,128,0.12); color: #E87580; }
+  [data-theme="dark"] .diff-badge.zero { background: var(--border); color: var(--text-muted); }
+  [data-theme="dark"] .r-card { border-color: rgba(90,191,179,0.08); }
+  [data-theme="dark"] .r-card:hover { border-color: rgba(90,191,179,0.15); box-shadow: var(--shadow-md), 0 0 20px rgba(90,191,179,0.04); }
+  [data-theme="dark"] .hero-stat-chip { background: var(--border); }
+  [data-theme="dark"] .cb-fill.b1 { color: var(--text-muted); }
+  [data-theme="dark"] .cb-fill.b2 { background: linear-gradient(90deg, #1E3A33, #264840); color: var(--text-muted); }
+  [data-theme="dark"] .cb-fill.b3 { background: linear-gradient(90deg, #264840, #2E5A50); }
+  [data-theme="dark"] .cb-fill.b4 { background: linear-gradient(90deg, #2E5A50, #387060); }
+  [data-theme="dark"] body::before {
+    background:
+      radial-gradient(ellipse 80% 60% at 15% 5%, rgba(90,191,179,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 90% 85%, rgba(232,192,96,0.03) 0%, transparent 50%);
+    animation-name: bgShiftDark;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 15% 5%, rgba(47,140,127,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 90% 85%, rgba(217,162,59,0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+    animation: bgShift 25s ease-in-out infinite alternate;
+  }
+
+  @keyframes bgShift { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+  @keyframes bgShiftDark { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeInScale { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  @keyframes shimmer { to { background-position: 200% center; } }
+
+  /* 헤더 */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--header-bg);
+    backdrop-filter: blur(24px) saturate(1.5);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: white;
+    box-shadow: 0 3px 12px rgba(47,140,127,0.3);
+    transition: transform 0.3s ease;
+  }
+
+  .logo:hover .logo-icon { transform: rotate(-8deg) scale(1.08); }
+
+  .logo-text {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 19px;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .logo-text span { color: var(--primary); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .pet-count-header {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .theme-toggle {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover {
+    border-color: var(--primary);
+    background: var(--primary-subtle);
+    transform: scale(1.12) rotate(15deg);
+    box-shadow: var(--shadow-md);
+  }
+  .theme-toggle:active { transform: scale(0.95) rotate(-10deg); }
+
+  /* 메인 컨테이너 */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 32px 40px;
+    animation: fadeIn 0.5s ease both;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .col-left { display: flex; flex-direction: column; gap: 16px; position: relative; z-index: 2; }
+  .col-right { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 80px; z-index: 1; }
+
+  /* 카드 */
+  .r-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    overflow: visible;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: box-shadow 0.35s ease, border-color 0.35s ease;
+  }
+  .r-card:hover {
+    box-shadow: var(--shadow-lg), 0 0 0 1px rgba(47,140,127,0.08);
+  }
+
+  .r-card-head {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .r-card-body { padding: 18px; }
+
+  /* 검색 */
+  .search-wrap { position: relative; z-index: 60; }
+
+  .search-input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 400;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    transition: all 0.25s ease;
+  }
+  .search-input::placeholder { color: var(--text-muted); font-weight: 300; }
+  .search-input:focus {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-glow);
+    background: var(--card);
+  }
+
+  .pet-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    box-shadow: var(--shadow-lg);
+    z-index: 50;
+    display: none;
+  }
+  .pet-list.show {
+    display: block;
+    animation: dropdownReveal 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  [data-theme="dark"] .pet-list { background: #1A2420; }
+
+  @keyframes dropdownReveal {
+    from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .pet-item {
+    padding: 11px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .pet-item:last-child { border-bottom: none; }
+  .pet-item:hover { background: var(--primary-subtle); transform: translateX(3px); }
+  .pet-item.selected { background: var(--primary); color: #fff; }
+  .pet-count { font-size: 11px; color: var(--text-muted); margin-top: 6px; text-align: right; font-weight: 500; }
+
+  /* 펫 정보 */
+  .pet-info-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0 4px;
+    margin-top: 8px;
+    border-top: 1px solid var(--border-light);
+  }
+  .pet-info-row h3 { font-size: 16px; font-weight: 700; }
+  .pet-info-row p { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+
+  /* S랭크 */
+  .srank-title {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 12px;
+    padding-bottom: 4px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .srank-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .srank-item {
+    background: var(--border-light);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+  }
+  .srank-item:hover { background: var(--primary-subtle); }
+  .srank-item .label { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+  .srank-item .val { font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; color: var(--primary); }
+
+  /* 스탯 입력 */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    min-width: 0;
+  }
+  .stat-group { min-width: 0; }
+  .stat-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  .stat-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .diff-badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    font-family: 'Outfit', monospace;
+    padding: 1px 5px;
+    border-radius: 3px;
+    opacity: 0;
+    transform: scale(0.85);
+    transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
+  }
+  .diff-badge.show { opacity: 1; transform: scale(1); }
+  .diff-badge.pos { background: #E8F8F0; color: var(--success); }
+  .diff-badge.neg { background: #FDEDED; color: var(--danger); }
+  .diff-badge.zero { background: var(--border-light); color: var(--text-muted); }
+
+  .stepper {
+    display: flex;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--card);
+    transition: all 0.2s;
+    min-width: 0;
+  }
+  .stepper:focus-within {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-glow);
+  }
+  .step-btn {
+    width: 34px;
+    flex-shrink: 0;
+    border: none;
+    background: var(--border-light);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s;
+    user-select: none;
+    font-family: 'Outfit', sans-serif;
+  }
+  .step-btn:hover { background: var(--primary-glow); color: var(--primary); }
+  .step-btn:active { background: var(--primary); color: white; }
+
+  .step-input {
+    flex: 1;
+    border: none;
+    text-align: center;
+    font-size: 15px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    color: var(--text);
+    padding: 9px 2px;
+    outline: none;
+    background: transparent;
+    min-width: 0;
+    width: 0;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .step-input::-webkit-inner-spin-button,
+  .step-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  .calc-btn {
+    width: 100%;
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
+    box-shadow: 0 4px 14px rgba(47,140,127,0.28);
+    position: relative;
+    overflow: hidden;
+  }
+  .calc-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.12));
+    pointer-events: none;
+  }
+  .calc-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(47,140,127,0.35);
+  }
+  .calc-btn:active { transform: translateY(0); }
+
+  /* 결과 */
+  .results-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .results-empty .re-icon { font-size: 40px; opacity: 0.3; margin-bottom: 10px; }
+  .results-empty .re-text { font-size: 14px; font-weight: 500; }
+
+  .results-wrap {
+    display: none;
+    gap: 16px;
+    animation: fadeInScale 0.45s ease both;
+  }
+  .results-wrap.show {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 히어로 확률 */
+  .hero-body {
+    padding: 28px 24px;
+    text-align: center;
+  }
+  .hero-grade-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .hero-grade-badge.grade-success {
+    background: linear-gradient(135deg, rgba(212,168,83,0.15), rgba(212,168,83,0.08));
+    color: #B8922E;
+    border: 1px solid rgba(212,168,83,0.25);
+  }
+  [data-theme="dark"] .hero-grade-badge.grade-success {
+    background: rgba(232,192,96,0.12);
+    border-color: rgba(232,192,96,0.3);
+    color: #E8C868;
+  }
+  .hero-grade-badge.grade-fail {
+    background: var(--border-light);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .hero-prob {
+    font-family: 'Outfit', sans-serif;
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+    margin-bottom: 4px;
+  }
+  .hero-prob.prob-high {
+    background: linear-gradient(135deg, var(--accent-gold), #E8C468);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-prob.prob-mid {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-prob.prob-low { color: var(--text-muted); }
+
+  .hero-prob-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+
+  .hero-sub {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  .hero-stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .hero-stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--border-light);
+    border-radius: 10px;
+    transition: background 0.2s;
+  }
+  .hero-stat-chip:hover { background: var(--primary-subtle); }
+  .hero-stat-chip .hsc-label { font-size: 11.5px; color: var(--text-secondary); font-weight: 500; }
+  .hero-stat-chip .hsc-val { font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; color: var(--primary); }
+
+  /* 등급 차트 */
+  .chart-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 7px;
+  }
+  .chart-bar-row:last-child { margin-bottom: 0; }
+  .cb-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    width: 36px;
+    text-align: right;
+    font-family: 'Outfit';
+    flex-shrink: 0;
+  }
+  .cb-track {
+    flex: 1;
+    height: 22px;
+    border-radius: 5px;
+    background: var(--border-light);
+  }
+  .cb-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.7s cubic-bezier(0.22,1,0.36,1);
+    display: flex;
+    align-items: center;
+    padding-left: 7px;
+    font-size: 9.5px;
+    font-weight: 600;
+    overflow: visible;
+    white-space: nowrap;
+  }
+  .cb-fill.b8 { background: linear-gradient(90deg, var(--accent-gold), #E8C468); }
+  .cb-fill.b7 { background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+  .cb-fill.b6 { background: linear-gradient(90deg, var(--accent-blue), #7AABCD); }
+  .cb-fill.b5 { background: linear-gradient(90deg, #7B9BA5, #93B0B8); }
+  .cb-fill.b4 { background: linear-gradient(90deg, #A0ADB0, #B5C0C3); }
+  .cb-fill.b3 { background: linear-gradient(90deg, #B8C2C5, #CCD4D6); }
+  .cb-fill.b2 { background: linear-gradient(90deg, #CDD5D7, #DEE4E5); }
+  .cb-fill.b1 { background: linear-gradient(90deg, #DDE3E4, #EBF0F0); color: var(--text-muted); }
+  .cb-count {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--text-muted);
+    width: 54px;
+    text-align: right;
+    font-family: 'Outfit';
+    flex-shrink: 0;
+  }
+
+  .match-info {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .match-info strong { color: var(--primary); font-family: 'Outfit', sans-serif; }
+
+  /* 푸터 */
+  .site-footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--text-muted);
+    position: relative;
+    z-index: 1;
+  }
+
+  @media(max-width:780px) {
     .container {
-        max-width: 480px;
-        width: 90%;
-        margin: 30px auto;
-        padding: 30px;
-        background: var(--bg-panel);
-        border: 1px solid var(--border-main);
-        border-radius: 24px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      grid-template-columns: 1fr;
+      max-width: 580px;
+      padding: 16px 16px 32px;
     }
-
-    h1 {
-        text-align: center;
-        margin-bottom: 25px;
-        font-size: 26px;
-        font-weight: 800;
-        background: var(--accent-gold);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        letter-spacing: -1px;
-    }
-
-    .intro {
-        margin-bottom: 25px; padding: 18px;
-        background: rgba(255, 212, 71, 0.03);
-        border: 1px solid var(--border-gold);
-        border-radius: 16px;
-        line-height: 1.6; text-align: center;
-        color: var(--text-sub); font-size: 13px;
-    }
-
-    .intro strong { color: var(--text-gold); }
-
-    .input-group { position: relative; margin-bottom: 25px; }
-    label { display: block; margin-bottom: 10px; font-size: 14px; font-weight: 600; color: var(--text-gold); }
-
-    #pet-name {
-        width: 100%; padding: 16px; font-size: 16px;
-        background: #000;
-        border: 1px solid var(--border-main);
-        color: #fff;
-        border-radius: 12px; box-sizing: border-box;
-        outline: none;
-        transition: 0.3s;
-    }
-
-    #pet-name:focus { border-color: #ff9500; box-shadow: 0 0 10px rgba(255, 149, 0, 0.2); }
-
-    .stat-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 15px;
-        background: rgba(255,255,255,0.02);
-        padding: 10px 15px;
-        border-radius: 12px;
-    }
-
-    .stat-label { font-size: 15px; font-weight: 600; }
-
-    .control-group { display: flex; align-items: center; gap: 8px; }
-
-    input[type="number"] {
-        width: 65px; height: 46px; font-size: 18px; font-weight: 700;
-        border: 1px solid var(--border-main); border-radius: 10px;
-        text-align: center; background: #000; color: #fff;
-        cursor: pointer; -moz-appearance: textfield;
-    }
-
-    input[type="number"]::-webkit-outer-spin-button,
-    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-    .btn-step {
-        width: 44px; height: 44px; border: 1px solid var(--border-main);
-        background: #222; border-radius: 10px; font-size: 20px;
-        font-weight: bold; color: var(--text-gold); cursor: pointer;
-        transition: 0.2s;
-    }
-
-    .btn-step:hover { background: #333; border-color: var(--text-gold); }
-    .btn-step:active { transform: scale(0.92); }
-
-    #suggestions {
-        list-style: none; padding: 0; margin: 0; position: absolute;
-        top: 100%; left: 0; right: 0; background: #1a1a1a;
-        border: 1px solid #ff9500; border-top: none;
-        border-radius: 0 0 12px 12px;
-        max-height: 240px; overflow-y: auto; z-index: 999; display: none;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-    #suggestions li {
-        padding: 14px 16px; cursor: pointer; border-bottom: 1px solid #222;
-        font-size: 15px; color: #ccc;
-    }
-    #suggestions li:hover { background-color: rgba(255, 149, 0, 0.15); color: #fff; }
-    #suggestions li strong { color: var(--text-gold); }
-
-    button#calculate-btn {
-        width: 100%; margin-top: 25px; padding: 20px; font-size: 18px;
-        font-weight: 800; background: var(--accent-gold);
-        color: #000; border: none; border-radius: 14px; cursor: pointer;
-        transition: 0.3s;
-    }
-
-    button#calculate-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 149, 0, 0.4); }
-    button:disabled { opacity: 0.3; cursor: not-allowed; }
-
-    .result {
-        margin-top: 25px; padding: 25px;
-        background: #000;
-        border: 1px solid var(--border-gold);
-        border-radius: 18px;
-        text-align: center;
-        min-height: 60px;
-    }
-
-    #loading { display: none; text-align: center; margin-top: 15px; color: var(--text-gold); font-weight: 500; }
-
-    footer { text-align: center; margin: 30px 0; width: 100%; }
+    .col-right { position: static; }
+    .header-inner { padding: 12px 16px; }
+    .hero-prob { font-size: 48px; }
+    .stat-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .hero-stats-row { gap: 8px; }
+    .hero-stat-chip { padding: 6px 12px; }
+  }
 </style>
 </head>
 <body>
-    <div class="container">
-        <h1>젠이스 계산기</h1>
-        <div class="intro">
-            <strong>Update : 2026/02/21</strong><br>
-            정석 대비 <strong>차이값(+/-)</strong>을 입력하세요.<br>
-            <small style="color:var(--text-gold)">숫자를 클릭하면 0으로 초기화됩니다.</small>
+
+<!-- 헤더 -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">&#9889;</div>
+      <div class="logo-text"><span>제니스</span> 환각</div>
+    </div>
+    <div class="header-right">
+      <span class="pet-count-header" id="petCountHeader"></span>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">&#127769;</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- 좌측: 검색 + 입력 -->
+  <div class="col-left">
+    <div class="r-card" style="z-index:10; position:relative;">
+      <div class="r-card-head">&#128269; 펫 검색</div>
+      <div class="r-card-body">
+        <div class="search-wrap">
+          <input class="search-input" id="petSearch" placeholder="펫 이름 검색 (초성 가능)" oninput="filterPets()" onfocus="showDropdown()" autocomplete="off">
+          <div class="pet-list" id="petList"></div>
+        </div>
+        <div class="pet-count" id="petCount"></div>
+
+        <div class="pet-info-row" id="petInfoRow" style="display:none">
+          <div>
+            <h3 id="petName">-</h3>
+            <p id="petSub">-</p>
+          </div>
         </div>
 
-        <div class="input-group">
-            <label for="pet-name">페트 이름</label>
-            <input type="text" id="pet-name" placeholder="데이터 불러오는 중..." autocomplete="off" disabled>
-            <ul id="suggestions"></ul>
+        <div id="srankArea" style="display:none">
+          <div class="srank-title">S랭크(환각) 기준 초기치</div>
+          <div class="srank-grid" id="srankGrid"></div>
         </div>
-
-        <div class="stat-row"><div class="stat-label">체력 차이</div><div class="control-group"><button class="btn-step" onclick="step('diff-health', -1)">-</button><input type="number" id="diff-health" value="0" onclick="resetVal(this)"><button class="btn-step" onclick="step('diff-health', 1)">+</button></div></div>
-        <div class="stat-row"><div class="stat-label">공격력 차이</div><div class="control-group"><button class="btn-step" onclick="step('diff-attack', -1)">-</button><input type="number" id="diff-attack" value="0" onclick="resetVal(this)"><button class="btn-step" onclick="step('diff-attack', 1)">+</button></div></div>
-        <div class="stat-row"><div class="stat-label">방어력 차이</div><div class="control-group"><button class="btn-step" onclick="step('diff-defense', -1)">-</button><input type="number" id="diff-defense" value="0" onclick="resetVal(this)"><button class="btn-step" onclick="step('diff-defense', 1)">+</button></div></div>
-        <div class="stat-row"><div class="stat-label">순발력 차이</div><div class="control-group"><button class="btn-step" onclick="step('diff-agility', -1)">-</button><input type="number" id="diff-agility" value="0" onclick="resetVal(this)"><button class="btn-step" onclick="step('diff-agility', 1)">+</button></div></div>
-
-        <button id="calculate-btn" disabled>데이터 대기 중</button>
-
-        <div id="result" class="result">페트 이름을 먼저 선택해 주세요.</div>
-        <div id="loading">계산 중입니다...</div>
+      </div>
     </div>
 
-    <script>
-        let petData = {};
-        let currentPet = null;
-        let currentIdealStats = null;
-        let currentKU = null;
+    <div class="r-card" id="inputCard">
+      <div class="r-card-head">&#128202; 스탯 입력</div>
+      <div class="r-card-body">
+        <div class="stat-grid">
+          <div class="stat-group">
+            <div class="stat-label-row">
+              <span class="stat-label">내구력</span>
+              <span class="diff-badge" id="dHp"></span>
+            </div>
+            <div class="stepper">
+              <button class="step-btn" onclick="adj('Hp',-1)">&minus;</button>
+              <input type="number" class="step-input" id="iHp" value="0" oninput="updateDiffs()">
+              <button class="step-btn" onclick="adj('Hp',1)">+</button>
+            </div>
+          </div>
+          <div class="stat-group">
+            <div class="stat-label-row">
+              <span class="stat-label">공격력</span>
+              <span class="diff-badge" id="dAtk"></span>
+            </div>
+            <div class="stepper">
+              <button class="step-btn" onclick="adj('Atk',-1)">&minus;</button>
+              <input type="number" class="step-input" id="iAtk" value="0" oninput="updateDiffs()">
+              <button class="step-btn" onclick="adj('Atk',1)">+</button>
+            </div>
+          </div>
+          <div class="stat-group">
+            <div class="stat-label-row">
+              <span class="stat-label">방어력</span>
+              <span class="diff-badge" id="dDef"></span>
+            </div>
+            <div class="stepper">
+              <button class="step-btn" onclick="adj('Def',-1)">&minus;</button>
+              <input type="number" class="step-input" id="iDef" value="0" oninput="updateDiffs()">
+              <button class="step-btn" onclick="adj('Def',1)">+</button>
+            </div>
+          </div>
+          <div class="stat-group">
+            <div class="stat-label-row">
+              <span class="stat-label">순발력</span>
+              <span class="diff-badge" id="dAgi"></span>
+            </div>
+            <div class="stepper">
+              <button class="step-btn" onclick="adj('Agi',-1)">&minus;</button>
+              <input type="number" class="step-input" id="iAgi" value="0" oninput="updateDiffs()">
+              <button class="step-btn" onclick="adj('Agi',1)">+</button>
+            </div>
+          </div>
+        </div>
+        <button class="calc-btn" onclick="calculate()">&#10024; 계산하기</button>
+      </div>
+    </div>
+  </div>
 
-        /* ========= ESET (보정계수 후보) ========= */
-        const ESET = Array.from({length: ((575-435)/5)+1}, (_,i) => 575 - i*5);
+  <!-- 우측: 결과 -->
+  <div class="col-right">
+    <div class="r-card">
+      <div class="r-card-head">&#127942; 계산 결과</div>
+      <div class="r-card-body">
+        <div class="results-empty" id="resEmpty">
+          <div class="re-icon">&#128300;</div>
+          <div class="re-text">펫을 선택하고 스탯을 입력하세요</div>
+        </div>
+        <div class="results-wrap" id="resultsWrap">
+          <div class="hero-body" id="heroArea">
+            <div class="hero-grade-badge" id="heroBadge">8등급 환각</div>
+            <div class="hero-prob" id="heroPct">-</div>
+            <div class="hero-prob-label">환각(8등급) 확률</div>
+            <div class="hero-sub" id="heroSub"></div>
+            <div class="hero-stats-row" id="heroStats"></div>
+          </div>
+          <div id="chartArea"></div>
+          <div class="match-info">일치하는 조합: <strong id="matchVal">0</strong>개 / 178,750개</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        /* ========= 데이터 로드 ========= */
-        async function loadPetData() {
-            try {
-                const response = await fetch('제니스_pet.json');
-                if (!response.ok) throw new Error('파일 없음');
-                petData = await response.json();
-                const nameInput = document.getElementById("pet-name");
-                nameInput.disabled = false;
-                nameInput.placeholder = "이름 또는 초성 입력";
-                document.getElementById("calculate-btn").innerText = "계산하기";
-                document.getElementById("calculate-btn").disabled = false;
-            } catch (error) {
-                document.getElementById("result").innerText = "pet.json 로드 실패";
-            }
-        }
-        loadPetData();
+<div class="site-footer">제니스 환각 계산기</div>
 
-        /* ========= 헬퍼 ========= */
-        function step(id, val) { const el = document.getElementById(id); el.value = parseInt(el.value || 0) + val; }
-        function resetVal(el) { el.value = 0; el.select(); }
-        function getChosung(str) {
-            const cho = ["ㄱ","ㄲ","ㄴ","ㄷ","ㄸ","ㄹ","ㅁ","ㅂ","ㅃ","ㅅ","ㅆ","ㅇ","ㅈ","ㅉ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"];
-            let result = "";
-            for(let i=0; i<str.length; i++) {
-                let code = str.charCodeAt(i) - 44032;
-                if(code > -1 && code < 11172) result += cho[Math.floor(code/588)];
-                else result += str.charAt(i);
-            }
-            return result;
-        }
+<script>
+/* ========= 전역 ========= */
+const TOTAL = 178750;
+const ESET = Array.from({length: ((575-435)/5)+1}, (_,i) => 575 - i*5);
+let GLOBAL_TABLE = {};
+let ALL_NAMES = [];
+let selectedName = null;
+let selectedRow = null;
 
-        /* ========= k/u 추정 (Decimal.js) ========= */
-        function solveUFromSG(SG, e) {
-            try {
-                if (!SG || ![SG.hp, SG.atk, SG.def, SG.agi].every(Number.isFinite)) return null;
-                Decimal.set({ precision: 50, rounding: Decimal.ROUND_HALF_UP });
+/* ========= 초성 유틸 ========= */
+const CHO_CODE = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const CHO_SIMPLE = c => ({"ㄲ":"ㄱ","ㄸ":"ㄷ","ㅃ":"ㅂ","ㅆ":"ㅅ","ㅉ":"ㅈ"}[c]||c);
+function getChosung(str) {
+  let out = '';
+  for (const ch of str) {
+    const code = ch.charCodeAt(0);
+    if (code < 0xAC00 || code > 0xD7A3) { out += ch; continue; }
+    out += CHO_SIMPLE(CHO_CODE[Math.floor((code - 0xAC00) / 588)]);
+  }
+  return out;
+}
+function isChosungOnly(str) { return /^[ㄱ-ㅎ]+$/.test(str); }
 
-                const eD = new Decimal(e);
-                const f = eD.dividedBy(10000);
-                const d = new Decimal(SG.agi).times(10000).dividedBy(eD).minus(4.5);
-                const dRound = d.round();
-                const dPlus45 = dRound.plus(4.5);
+/* ========= k/u 추정 ========= */
+function solveUFromSG(SG, e) {
+  try {
+    if (!SG || ![SG.hp, SG.atk, SG.def, SG.agi].every(Number.isFinite)) return null;
+    Decimal.set({ precision: 50, rounding: Decimal.ROUND_HALF_UP });
 
-                const rhs1 = new Decimal(SG.hp).minus(dPlus45.times(f)).dividedBy(f);
-                const rhs2 = new Decimal(SG.atk).minus(dPlus45.times(f).times(0.05)).dividedBy(f);
-                const rhs3 = new Decimal(SG.def).minus(dPlus45.times(f).times(0.05)).dividedBy(f);
+    const eD = new Decimal(e);
+    const f = eD.dividedBy(10000);
+    const d = new Decimal(SG.agi).times(10000).dividedBy(eD).minus(4.5);
+    const dRound = d.round();
+    const dPlus45 = dRound.plus(4.5);
 
-                let A = [
-                    [new Decimal(4), new Decimal(1), new Decimal(1), rhs1],
-                    [new Decimal(0.1), new Decimal(1), new Decimal(0.1), rhs2],
-                    [new Decimal(0.1), new Decimal(0.1), new Decimal(1), rhs3],
-                ];
-                for (let i = 0; i < 3; i++) {
-                    let mr = i, mv = A[i][i].abs();
-                    for (let j = i+1; j < 3; j++) { const t = A[j][i].abs(); if (t.greaterThan(mv)) { mr=j; mv=t; } }
-                    if (mr !== i) { const tmp = A[i]; A[i] = A[mr]; A[mr] = tmp; }
-                    const piv = A[i][i];
-                    for (let j = i; j < 4; j++) A[i][j] = A[i][j].dividedBy(piv);
-                    for (let k = 0; k < 3; k++) {
-                        if (k === i) continue;
-                        const fac = A[k][i];
-                        for (let j = i; j < 4; j++) A[k][j] = A[k][j].minus(fac.times(A[i][j]));
-                    }
-                }
+    const rhs1 = new Decimal(SG.hp).minus(dPlus45.times(f)).dividedBy(f);
+    const rhs2 = new Decimal(SG.atk).minus(dPlus45.times(f).times(0.05)).dividedBy(f);
+    const rhs3 = new Decimal(SG.def).minus(dPlus45.times(f).times(0.05)).dividedBy(f);
 
-                const u_hp = A[0][3].minus(4.5).round();
-                const u_atk = A[1][3].minus(4.5).round();
-                const u_def = A[2][3].minus(4.5).round();
-                const u_agi = dRound;
+    let A = [
+      [new Decimal(4), new Decimal(1), new Decimal(1), rhs1],
+      [new Decimal(0.1), new Decimal(1), new Decimal(0.1), rhs2],
+      [new Decimal(0.1), new Decimal(0.1), new Decimal(1), rhs3],
+    ];
+    for (let i = 0; i < 3; i++) {
+      let mr = i, mv = A[i][i].abs();
+      for (let j = i+1; j < 3; j++) { const t = A[j][i].abs(); if (t.greaterThan(mv)) { mr=j; mv=t; } }
+      if (mr !== i) { const tmp = A[i]; A[i] = A[mr]; A[mr] = tmp; }
+      const piv = A[i][i];
+      for (let j = i; j < 4; j++) A[i][j] = A[i][j].dividedBy(piv);
+      for (let k = 0; k < 3; k++) {
+        if (k === i) continue;
+        const fac = A[k][i];
+        for (let j = i; j < 4; j++) A[k][j] = A[k][j].minus(fac.times(A[i][j]));
+      }
+    }
 
-                const r2 = x => new Decimal(x).toDecimalPlaces(2);
-                const hp_chk = r2(f.times(u_hp.plus(4.5).times(4).plus(u_atk.plus(4.5)).plus(u_def.plus(4.5)).plus(u_agi.plus(4.5))));
-                const atk_chk = r2(f.times(u_hp.plus(4.5).times(0.1).plus(u_atk.plus(4.5)).plus(u_def.plus(4.5).times(0.1)).plus(u_agi.plus(4.5).times(0.05))));
-                const def_chk = r2(f.times(u_hp.plus(4.5).times(0.1).plus(u_atk.plus(4.5).times(0.1)).plus(u_def.plus(4.5)).plus(u_agi.plus(4.5).times(0.05))));
-                const agi_chk = r2(f.times(u_agi.plus(4.5)));
+    const u_hp = A[0][3].minus(4.5).round();
+    const u_atk = A[1][3].minus(4.5).round();
+    const u_def = A[2][3].minus(4.5).round();
+    const u_agi = dRound;
 
-                const err = hp_chk.minus(r2(SG.hp)).abs()
-                    .plus(atk_chk.minus(r2(SG.atk)).abs())
-                    .plus(def_chk.minus(r2(SG.def)).abs())
-                    .plus(agi_chk.minus(r2(SG.agi)).abs());
+    const r2 = x => new Decimal(x).toDecimalPlaces(2);
+    const hp_chk = r2(f.times(u_hp.plus(4.5).times(4).plus(u_atk.plus(4.5)).plus(u_def.plus(4.5)).plus(u_agi.plus(4.5))));
+    const atk_chk = r2(f.times(u_hp.plus(4.5).times(0.1).plus(u_atk.plus(4.5)).plus(u_def.plus(4.5).times(0.1)).plus(u_agi.plus(4.5).times(0.05))));
+    const def_chk = r2(f.times(u_hp.plus(4.5).times(0.1).plus(u_atk.plus(4.5).times(0.1)).plus(u_def.plus(4.5)).plus(u_agi.plus(4.5).times(0.05))));
+    const agi_chk = r2(f.times(u_agi.plus(4.5)));
 
-                return { u: {hp:+u_hp, atk:+u_atk, def:+u_def, agi:+u_agi}, e, sg_err:+err };
-            } catch(e) { return null; }
-        }
+    const err = hp_chk.minus(r2(SG.hp)).abs()
+      .plus(atk_chk.minus(r2(SG.atk)).abs())
+      .plus(def_chk.minus(r2(SG.def)).abs())
+      .plus(agi_chk.minus(r2(SG.agi)).abs());
 
-        function s0FromKU(k, u) {
-            const fac = k / 100;
-            const vhp = (u.hp + 4.5) * fac;
-            const vatk = (u.atk + 4.5) * fac;
-            const vdef = (u.def + 4.5) * fac;
-            const vagi = (u.agi + 4.5) * fac;
-            return [
-                Math.floor(vhp*4 + vatk + vdef + vagi),
-                Math.floor(vhp*0.1 + vatk + vdef*0.1 + vagi*0.05),
-                Math.floor(vhp*0.1 + vatk*0.1 + vdef + vagi*0.05),
-                Math.floor(vagi)
-            ];
-        }
+    return { u: {hp:+u_hp, atk:+u_atk, def:+u_def, agi:+u_agi}, e, sg_err:+err };
+  } catch(e) { return null; }
+}
 
-        function fitKFromS0(S0int, u) {
-            let best = null;
-            for (let k = 1; k <= 100; k++) {
-                const s = s0FromKU(k, u);
-                const l1 = Math.abs(s[0]-S0int[0]) + Math.abs(s[1]-S0int[1]) + Math.abs(s[2]-S0int[2]) + Math.abs(s[3]-S0int[3]);
-                const ok = (l1 === 0);
-                if (!best || (ok && !best.ok) || (!best.ok && l1 < best.l1)) best = {k, l1, ok};
-                if (ok) break;
-            }
-            return best;
-        }
+function s0FromKU(k, u) {
+  const fac = k / 100;
+  const vhp = (u.hp + 4.5) * fac;
+  const vatk = (u.atk + 4.5) * fac;
+  const vdef = (u.def + 4.5) * fac;
+  const vagi = (u.agi + 4.5) * fac;
+  return [
+    Math.floor(vhp*4 + vatk + vdef + vagi),
+    Math.floor(vhp*0.1 + vatk + vdef*0.1 + vagi*0.05),
+    Math.floor(vhp*0.1 + vatk*0.1 + vdef + vagi*0.05),
+    Math.floor(vagi)
+  ];
+}
 
-        function inferKU(S0, SG) {
-            const S0int = [Math.floor(S0.hp), Math.floor(S0.atk), Math.floor(S0.def), Math.floor(S0.agi)];
-            let best = null;
-            for (const e of ESET) {
-                const sol = solveUFromSG(SG, e);
-                if (!sol) continue;
-                const fit = fitKFromS0(S0int, sol.u);
-                if (!fit) continue;
-                const score = (fit.ok ? 0 : 1000) + fit.l1*10 + (sol.sg_err || 0);
-                const cand = {k: fit.k, u: sol.u, e, sg_err: sol.sg_err, s0_l1: fit.l1, s0_ok: fit.ok, score};
-                if (!best || cand.score < best.score) best = cand;
-            }
-            return best;
-        }
+function fitKFromS0(S0int, u) {
+  let best = null;
+  for (let k = 1; k <= 100; k++) {
+    const s = s0FromKU(k, u);
+    const l1 = Math.abs(s[0]-S0int[0]) + Math.abs(s[1]-S0int[1]) + Math.abs(s[2]-S0int[2]) + Math.abs(s[3]-S0int[3]);
+    const ok = (l1 === 0);
+    if (!best || (ok && !best.ok) || (!best.ok && l1 < best.l1)) best = {k, l1, ok};
+    if (ok) break;
+  }
+  return best;
+}
 
-        /* ========= 열거 엔진 (Decimal.js) ========= */
-        function enumerate(pku, obs) {
-            const k = new Decimal(pku.k);
-            const fac = k.dividedBy(100);
-            const u = pku.u;
+function inferKU(S0, SG) {
+  const S0int = [Math.floor(S0.hp), Math.floor(S0.atk), Math.floor(S0.def), Math.floor(S0.agi)];
+  let best = null;
+  for (const e of ESET) {
+    const sol = solveUFromSG(SG, e);
+    if (!sol) continue;
+    const fit = fitKFromS0(S0int, sol.u);
+    if (!fit) continue;
+    const score = (fit.ok ? 0 : 1000) + fit.l1*10 + (sol.sg_err || 0);
+    const cand = {k: fit.k, u: sol.u, e, sg_err: sol.sg_err, s0_l1: fit.l1, s0_ok: fit.ok, score};
+    if (!best || cand.score < best.score) best = cand;
+  }
+  return best;
+}
 
-            let matches = 0, rank8 = 0;
-            const dist = {};
+/* ========= 열거 엔진 (Decimal.js) ========= */
+function enumerate(pku, obs) {
+  const k = new Decimal(pku.k);
+  const fac = k.dividedBy(100);
+  const u = pku.u;
 
-            for (let ar = -2; ar <= 2; ar++)
-            for (let dr = -2; dr <= 2; dr++)
-            for (let gr = -2; gr <= 2; gr++)
-            for (let hr = -2; hr <= 2; hr++)
-            for (let ab = 0; ab <= 10; ab++)
-            for (let db = 0; db <= 10; db++)
-            for (let gb = 0; gb <= 10; gb++) {
-                const hb = 10 - ab - db - gb;
-                if (hb < 0 || hb > 10) continue;
+  let matches = 0, rank8 = 0;
+  const dist = {};
 
-                const iA = new Decimal(u.atk + ar + ab).times(fac);
-                const iD = new Decimal(u.def + dr + db).times(fac);
-                const iG = new Decimal(u.agi + gr + gb).times(fac);
-                const iH = new Decimal(u.hp + hr + hb).times(fac);
+  for (let ar = -2; ar <= 2; ar++)
+  for (let dr = -2; dr <= 2; dr++)
+  for (let gr = -2; gr <= 2; gr++)
+  for (let hr = -2; hr <= 2; hr++)
+  for (let ab = 0; ab <= 10; ab++)
+  for (let db = 0; db <= 10; db++)
+  for (let gb = 0; gb <= 10; gb++) {
+    const hb = 10 - ab - db - gb;
+    if (hb < 0 || hb > 10) continue;
 
-                const calcHp  = iH.times(4).plus(iA).plus(iD).plus(iG).floor().toNumber();
-                const calcAtk = iH.times(0.1).plus(iA).plus(iD.times(0.1)).plus(iG.times(0.05)).floor().toNumber();
-                const calcDef = iH.times(0.1).plus(iA.times(0.1)).plus(iD).plus(iG.times(0.05)).floor().toNumber();
-                const calcAgi = iG.floor().toNumber();
+    const iA = new Decimal(u.atk + ar + ab).times(fac);
+    const iD = new Decimal(u.def + dr + db).times(fac);
+    const iG = new Decimal(u.agi + gr + gb).times(fac);
+    const iH = new Decimal(u.hp + hr + hb).times(fac);
 
-                if (calcHp === obs[0] && calcAtk === obs[1] && calcDef === obs[2] && calcAgi === obs[3]) {
-                    matches++;
-                    const r = ar + dr + gr + hr;
-                    dist[r] = (dist[r] || 0) + 1;
-                    if (r === 8) rank8++;
-                }
-            }
-            return {matches, rank8, dist};
-        }
+    const calcHp  = iH.times(4).plus(iA).plus(iD).plus(iG).floor().toNumber();
+    const calcAtk = iH.times(0.1).plus(iA).plus(iD.times(0.1)).plus(iG.times(0.05)).floor().toNumber();
+    const calcDef = iH.times(0.1).plus(iA.times(0.1)).plus(iD).plus(iG.times(0.05)).floor().toNumber();
+    const calcAgi = iG.floor().toNumber();
 
-        /* ========= 정석 스탯 계산 (S0에서 직접) ========= */
-        function calculateIdealStats(pet) {
-            return {
-                health: Math.floor(pet.s0.hp),
-                attack: Math.floor(pet.s0.atk),
-                defense: Math.floor(pet.s0.def),
-                agility: Math.floor(pet.s0.agi)
-            };
-        }
+    if (calcHp === obs[0] && calcAtk === obs[1] && calcDef === obs[2] && calcAgi === obs[3]) {
+      matches++;
+      const r = ar + dr + gr + hr;
+      dist[r] = (dist[r] || 0) + 1;
+      if (r === 8) rank8++;
+    }
+  }
+  return {matches, rank8, dist};
+}
 
-        /* ========= 검색 자동완성 ========= */
-        const petNameInput = document.getElementById("pet-name");
-        const suggestions = document.getElementById("suggestions");
+/* ========= UI ========= */
+function showDropdown() {
+  const kw = document.getElementById('petSearch').value.trim();
+  if (kw) {
+    document.getElementById('petList').classList.add('show');
+  }
+}
 
-        petNameInput.addEventListener("input", () => {
-            const query = petNameInput.value.trim();
-            suggestions.innerHTML = "";
-            if (!query) { suggestions.style.display = "none"; return; }
-            const queryChosung = getChosung(query);
-            const matches = Object.keys(petData).map(name => {
-                const nameChosung = getChosung(name);
-                let score = -1;
-                if (name === query) score = 4;
-                else if (name.startsWith(query)) score = 3;
-                else if (name.includes(query)) score = 2;
-                else if (nameChosung.startsWith(queryChosung)) score = 1;
-                else if (nameChosung.includes(queryChosung)) score = 0;
-                return { name, score };
-            }).filter(i => i.score > -1).sort((a,b) => b.score - a.score || a.name.localeCompare(b.name));
+function hideDropdown() {
+  setTimeout(() => document.getElementById('petList').classList.remove('show'), 150);
+}
 
-            if (matches.length > 0) {
-                suggestions.style.display = "block";
-                matches.slice(0, 12).forEach(m => {
-                    const li = document.createElement("li");
-                    li.innerHTML = m.name.replace(new RegExp(query, 'gi'), (match) => `<strong>${match}</strong>`);
-                    li.onclick = () => {
-                        petNameInput.value = m.name;
-                        suggestions.style.display = "none";
-                        currentPet = petData[m.name];
-                        currentIdealStats = calculateIdealStats(currentPet);
-                        // k/u 사전 추정
-                        currentKU = inferKU(currentPet.s0, currentPet.sg);
-                        document.getElementById("result").innerText = "차이값을 입력하고 계산을 눌러주세요.";
-                    };
-                    suggestions.appendChild(li);
-                });
-            } else { suggestions.style.display = "none"; }
-        });
+document.addEventListener('click', function(e) {
+  const wrap = document.querySelector('.search-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById('petList').classList.remove('show');
+  }
+});
 
-        /* ========= 계산 ========= */
-        document.getElementById("calculate-btn").addEventListener("click", () => {
-            const name = petNameInput.value;
-            if (!petData[name]) { alert("페트를 선택해주세요!"); return; }
-            if (!currentKU || !currentKU.s0_ok) {
-                alert("k/u 추정 실패: 이 펫의 데이터를 확인하세요.");
-                return;
-            }
+function filterPets() {
+  const kw = document.getElementById('petSearch').value.trim();
+  const list = kw
+    ? ALL_NAMES.filter(n => isChosungOnly(kw) ? getChosung(n).startsWith(kw) : n.includes(kw))
+    : [];
 
-            document.getElementById("loading").style.display = "block";
-            document.getElementById("result").innerHTML = "";
+  const el = document.getElementById('petList');
+  el.innerHTML = '';
 
-            setTimeout(() => {
-                const tH = currentIdealStats.health + parseInt(document.getElementById("diff-health").value || 0);
-                const tA = currentIdealStats.attack + parseInt(document.getElementById("diff-attack").value || 0);
-                const tD = currentIdealStats.defense + parseInt(document.getElementById("diff-defense").value || 0);
-                const tG = currentIdealStats.agility + parseInt(document.getElementById("diff-agility").value || 0);
+  if (!kw || list.length === 0) {
+    el.classList.remove('show');
+    document.getElementById('petCount').textContent = kw ? '검색 결과 없음' : `총 ${ALL_NAMES.length}개 펫`;
+    return;
+  }
 
-                const res = enumerate({k: currentKU.k, u: currentKU.u}, [tH, tA, tD, tG]);
+  const show = list.slice(0, 30);
+  show.forEach(n => {
+    const div = document.createElement('div');
+    div.className = 'pet-item' + (n === selectedName ? ' selected' : '');
+    div.textContent = n;
+    div.onclick = () => { selectPet(n); el.classList.remove('show'); };
+    el.appendChild(div);
+  });
+  el.classList.add('show');
+  document.getElementById('petCount').textContent =
+    list.length > 30 ? `${list.length}개 중 30개 표시` : `${list.length}개`;
+}
 
-                if (res.matches === 0) {
-                    document.getElementById("result").textContent = "존재할 수 없는 스탯 조합입니다.";
-                } else {
-                    const p = ((res.rank8 / res.matches) * 100).toFixed(2);
-                    const realP = p === "100.00" ? "99.9" : p;
-                    const expected = p > 0 ? (100 / p).toFixed(1) : "∞";
+function selectPet(name) {
+  selectedName = name;
+  selectedRow = GLOBAL_TABLE[name];
+  if (!selectedRow) return;
 
-                    // 등급 분포 생성
-                    const entries = Object.entries(res.dist).map(([r,c]) => ({r:+r, c})).sort((a,b) => b.r - a.r);
-                    let distHtml = entries.map(({r, c}) => {
-                        const pct = ((c / res.matches) * 100).toFixed(1);
-                        return `<span style="color:${r === 8 ? 'var(--text-gold)' : '#aaa'}">${r}등급: ${pct}%</span>`;
-                    }).join(' · ');
+  document.getElementById('petInfoRow').style.display = 'flex';
+  document.getElementById('petName').textContent = name;
+  document.getElementById('petSub').textContent =
+    `S0: ${selectedRow.s0.hp} / ${selectedRow.s0.atk} / ${selectedRow.s0.def} / ${selectedRow.s0.agi}`;
 
-                    document.getElementById("result").innerHTML = `
-                        <div style="font-size:20px; color:#fff;">성공 확률 : <strong style="color:var(--text-gold)">${realP}%</strong></div>
-                        <div style="margin-top:10px; font-size:14px; color:var(--text-sub);">
-                            성공 기대값 : 약 <strong>${expected}번</strong> 시도<br>
-                            <span style="font-size:11px; opacity:0.5;">(입력값: ${tH} ${tA} ${tD} ${tG} | k=${currentKU.k}, e=${currentKU.e})</span>
-                        </div>
-                        <div style="margin-top:14px; font-size:12px; color:var(--text-sub); line-height:1.8;">
-                            ${distHtml}
-                        </div>
-                        <div style="margin-top:8px; font-size:11px; opacity:0.4;">
-                            일치 조합: ${res.matches.toLocaleString()} / 178,750
-                        </div>`;
-                }
-                document.getElementById("loading").style.display = "none";
-            }, 100);
-        });
+  // S-rank display
+  document.getElementById('srankArea').style.display = '';
+  const names = {hp:'내구력', atk:'공격력', def:'방어력', agi:'순발력'};
+  let html = '';
+  for (const key of ['hp','atk','def','agi']) {
+    html += `<div class="srank-item"><span class="label">${names[key]}</span>
+      <span class="val">${selectedRow.s0[key]}</span></div>`;
+  }
+  html += '<div style="grid-column:1/-1"><div class="srank-title">S랭크 성장률</div></div>';
+  for (const key of ['hp','atk','def','agi']) {
+    html += `<div class="srank-item"><span class="label">${names[key]}</span>
+      <span class="val">${selectedRow.sg[key]}</span></div>`;
+  }
+  document.getElementById('srankGrid').innerHTML = html;
 
-        // 배경 클릭 시 리스트 닫기
-        document.addEventListener("click", (e) => { if (e.target !== petNameInput) suggestions.style.display = "none"; });
-    </script>
+  // Fill default stats
+  document.getElementById('iHp').value = Math.floor(selectedRow.s0.hp);
+  document.getElementById('iAtk').value = Math.floor(selectedRow.s0.atk);
+  document.getElementById('iDef').value = Math.floor(selectedRow.s0.def);
+  document.getElementById('iAgi').value = Math.floor(selectedRow.s0.agi);
+  updateDiffs();
 
-    <footer>
-        <a href="https://hits.sh/storazi.github.io/cigar/">
-            <img alt="Hits" src="https://hits.sh/storazi.github.io/cigar.svg?view=today-total&style=flat-square&label=VISITORS&color=ff9500&labelColor=222222"/>
-        </a>
-        <p style="font-size: 11px; color: var(--text-sub); margin-top:10px; opacity:0.6;">© 2026 sup_bot All rights reserved.</p>
-    </footer>
+  // Reset results
+  document.getElementById('resEmpty').style.display = '';
+  document.getElementById('resultsWrap').className = 'results-wrap';
+
+  // Clear search
+  document.getElementById('petSearch').value = '';
+}
+
+function updateDiffs() {
+  if (!selectedRow) return;
+  const keys = ['Hp','Atk','Def','Agi'];
+  const skeys = ['hp','atk','def','agi'];
+  for (let i = 0; i < 4; i++) {
+    const v = parseInt(document.getElementById('i'+keys[i]).value) || 0;
+    const sv = Math.floor(selectedRow.s0[skeys[i]]);
+    const diff = v - sv;
+    const el = document.getElementById('d'+keys[i]);
+    if (v === 0 && sv !== 0) {
+      el.className = 'diff-badge';
+    } else {
+      el.className = 'diff-badge show ' + (diff > 0 ? 'pos' : diff < 0 ? 'neg' : 'zero');
+      el.textContent = diff > 0 ? '+'+diff : diff === 0 ? '\u00b10' : String(diff);
+    }
+  }
+}
+
+function adj(stat, d) {
+  const el = document.getElementById('i' + stat);
+  el.value = (parseInt(el.value) || 0) + d;
+  updateDiffs();
+}
+
+function calculate() {
+  if (!selectedName || !selectedRow) { alert('펫을 먼저 선택하세요.'); return; }
+
+  const obs = [
+    parseInt(document.getElementById('iHp').value) || 0,
+    parseInt(document.getElementById('iAtk').value) || 0,
+    parseInt(document.getElementById('iDef').value) || 0,
+    parseInt(document.getElementById('iAgi').value) || 0
+  ];
+
+  const fit = inferKU(selectedRow.s0, selectedRow.sg);
+  if (!fit || !fit.s0_ok) {
+    alert('k/u 추정 실패: 이 펫의 데이터를 확인하세요.');
+    return;
+  }
+
+  const res = enumerate({k: fit.k, u: fit.u}, obs);
+
+  // 결과 표시
+  document.getElementById('resEmpty').style.display = 'none';
+  document.getElementById('resultsWrap').className = 'results-wrap show';
+
+  const pct = res.matches > 0 ? (res.rank8 / res.matches * 100) : 0;
+  const capPct = Math.min(pct, 99.99);
+
+  // 히어로 배지
+  const badge = document.getElementById('heroBadge');
+  badge.className = 'hero-grade-badge ' + (pct > 0 ? 'grade-success' : 'grade-fail');
+  badge.textContent = pct > 0 ? '8등급 환각' : '환각 불가';
+
+  // 확률 숫자
+  const probEl = document.getElementById('heroPct');
+  probEl.textContent = pct > 0 ? capPct.toFixed(2) + '%' : '0%';
+  probEl.className = 'hero-prob ' + (pct >= 10 ? 'prob-high' : pct > 0 ? 'prob-mid' : 'prob-low');
+
+  // 서브 텍스트
+  document.getElementById('heroSub').textContent =
+    res.matches > 0 ? `${res.rank8}/${res.matches} 조합 (k=${fit.k}, e=${fit.e})` : '일치하는 조합이 없습니다';
+
+  // 히어로 스탯 칩
+  const statsNames = ['내구력','공격력','방어력','순발력'];
+  let statsHtml = '';
+  obs.forEach((v, i) => {
+    statsHtml += `<div class="hero-stat-chip"><span class="hsc-label">${statsNames[i]}</span><span class="hsc-val">${v}</span></div>`;
+  });
+  document.getElementById('heroStats').innerHTML = statsHtml;
+
+  // 등급 차트
+  const entries = Object.entries(res.dist).map(([r,c]) => ({r:+r, c})).sort((a,b) => b.r - a.r);
+  const maxCount = Math.max(...entries.map(e => e.c), 1);
+  let chartHtml = '';
+  entries.forEach(({r, c}) => {
+    const w = (c / maxCount * 100).toFixed(1);
+    const p = (c / res.matches * 100).toFixed(1);
+    const bClass = r >= 8 ? 'b8' : r >= 7 ? 'b7' : r >= 6 ? 'b6' : r >= 5 ? 'b5' : r >= 4 ? 'b4' : r >= 3 ? 'b3' : r >= 2 ? 'b2' : 'b1';
+    chartHtml += `<div class="chart-bar-row">
+      <span class="cb-label">${r}등급</span>
+      <div class="cb-track"><div class="cb-fill ${bClass}" style="width:${w}%"></div></div>
+      <span class="cb-count">${p}%</span>
+    </div>`;
+  });
+  document.getElementById('chartArea').innerHTML = chartHtml;
+  document.getElementById('matchVal').textContent = res.matches.toLocaleString();
+}
+
+/* ========= Theme ========= */
+function toggleTheme() {
+  const d = document.documentElement;
+  const dark = d.getAttribute('data-theme') === 'dark';
+  d.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('themeToggle').textContent = dark ? '\u{1F319}' : '\u2600\uFE0F';
+  localStorage.setItem('zenith-theme', dark ? 'light' : 'dark');
+}
+(function() {
+  const s = localStorage.getItem('zenith-theme');
+  const isDark = s ? s === 'dark' : window.matchMedia('(prefers-color-scheme:dark)').matches;
+  if (isDark) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    setTimeout(() => document.getElementById('themeToggle').textContent = '\u2600\uFE0F', 0);
+  }
+})();
+
+/* ========= 부팅 ========= */
+(async function init() {
+  try {
+    const res = await fetch('/zenith-pets.json');
+    GLOBAL_TABLE = await res.json();
+  } catch(e) {
+    console.error('pets.json 로드 실패:', e);
+    document.getElementById('petCount').textContent = 'pets.json 로드 실패';
+    return;
+  }
+  ALL_NAMES = Object.keys(GLOBAL_TABLE).sort((a,b) => a.localeCompare(b, 'ko'));
+  document.getElementById('petCountHeader').textContent = `${ALL_NAMES.length}종`;
+  document.getElementById('petCount').textContent = `총 ${ALL_NAMES.length}개 펫`;
+})();
+</script>
 </body>
 </html>
